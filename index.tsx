@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 // --- Types
 type Card = { id: string; en: string; pt: string; cat?: string };
@@ -334,21 +340,30 @@ function PlayTab({ cards }: { cards: Card[] }) {
       );
   }, [cards, selectedCat]);
 
-  // Carrega vozes
+  // --- Carrega vozes (robusto com fallback)
   useEffect(() => {
     function refreshVoices() {
-      const list = speechSynthesis.getVoices();
+      const list = window.speechSynthesis.getVoices();
       setVoices(list);
-      if (!selectedVoiceURI) {
-        const pick = list.find((v) => v.lang?.toLowerCase().startsWith("en"));
+      if (!selectedVoiceURI && list.length) {
+        const pick =
+          list.find((v) => v.lang?.toLowerCase().startsWith("en")) ?? list[0];
         if (pick) setSelectedVoiceURI(pick.voiceURI);
       }
     }
     refreshVoices();
-    (window.speechSynthesis as any).onvoiceschanged = refreshVoices;
-    return () => {
-      (window.speechSynthesis as any).onvoiceschanged = null;
-    };
+
+    const synth: any = window.speechSynthesis as any;
+    if (synth && typeof synth.addEventListener === "function") {
+      synth.addEventListener("voiceschanged", refreshVoices);
+      return () => synth.removeEventListener("voiceschanged", refreshVoices);
+    } else {
+      // Fallback para navegadores que não tipam addEventListener no speechSynthesis
+      (window.speechSynthesis as any).onvoiceschanged = refreshVoices;
+      return () => {
+        (window.speechSynthesis as any).onvoiceschanged = null;
+      };
+    }
   }, [selectedVoiceURI]);
 
   // Embaralha ao mudar os jogáveis ou a categoria
@@ -405,32 +420,55 @@ function PlayTab({ cards }: { cards: Card[] }) {
       ? cards[currentIdx as number]
       : undefined;
 
+  // --- Fala estável (com retries e pequeno delay após cancel)
   const speakText = useCallback(
     (text: string) => {
       const synth = window?.speechSynthesis;
       if (!synth) return;
 
-      const attempt = (remaining: number) => {
+      const run = (retries = 8) => {
         const available = synth.getVoices();
         const pool = available.length ? available : voices;
+
         if (!pool.length) {
-          if (remaining <= 0) return;
-          setTimeout(() => attempt(remaining - 1), 150);
+          if (retries <= 0) return;
+          setTimeout(() => run(retries - 1), 150);
           return;
         }
 
-        const utterance = new SpeechSynthesisUtterance(text);
+        const utter = new SpeechSynthesisUtterance(text);
+
         const preferred = pool.find((v) => v.voiceURI === selectedVoiceURI);
-        const english = pool.find((v) => v.lang?.toLowerCase().startsWith("en"));
+        const english = pool.find((v) =>
+          v.lang?.toLowerCase().startsWith("en")
+        );
         const voice = preferred || english || pool[0];
-        if (voice) utterance.voice = voice;
-        utterance.rate = rate || 1;
-        synth.cancel();
-        if (synth.paused) synth.resume();
-        synth.speak(utterance);
+
+        if (voice) {
+          utter.voice = voice;
+          utter.lang = voice.lang || "en-US";
+        } else {
+          utter.lang = "en-US";
+        }
+        utter.pitch = 1;
+        console.log("utter", utter);
+
+        utter.rate = rate || 1;
+
+        try {
+          synth.cancel();
+        } catch {
+          // ignore
+        }
+
+        // Evita race condition cancel->speak no Chrome
+        setTimeout(() => {
+          if (synth.paused) synth.resume();
+          synth.speak(utter);
+        }, 0);
       };
 
-      attempt(5);
+      run();
     },
     [voices, selectedVoiceURI, rate]
   );
