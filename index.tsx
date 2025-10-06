@@ -7,7 +7,251 @@ import React, {
 } from "react";
 
 // --- Types
-type Card = { id: string; en: string; pt: string; cat?: string };
+type Card = { id: string; en: string; pt: string; category?: string };
+
+const defaultCards: Card[] = [
+  { id: "1a9x8kzq", en: "action", pt: "ação", category: "Connection - 1 - A" },
+  { id: "2b7y5qsd", en: "drama", pt: "drama", category: "Connection - 1 - A" },
+  {
+    id: "3n2p6lrf",
+    en: "romance",
+    pt: "romance",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "4r8t2zkw",
+    en: "adventure",
+    pt: "aventura",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "5c6m7ghe",
+    en: "comedy",
+    pt: "comédia",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "6p4k8djr",
+    en: "documentary",
+    pt: "documentário",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "7x2v5bce",
+    en: "horror",
+    pt: "horror",
+    category: "Connection - 1 - A",
+  },
+  { id: "8j9s6tlf", en: "crime", pt: "crime", category: "Connection - 1 - A" },
+  {
+    id: "9l1h3fdq",
+    en: "mystery",
+    pt: "mistério",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "0k2f8wue",
+    en: "sci-fi",
+    pt: "ficção científica",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "1v9e4qmt",
+    en: "musical",
+    pt: "musical",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "2r8w5yzp",
+    en: "thriller",
+    pt: "suspense",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "3h7d1bvx",
+    en: "superhero",
+    pt: "super-herói",
+    category: "Connection - 1 - A",
+  },
+  { id: "4j2a9msl", en: "war", pt: "guerra", category: "Connection - 1 - A" },
+  {
+    id: "5p6z8kdm",
+    en: "western",
+    pt: "faroeste",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "6t3h4cvn",
+    en: "cartoon, animated movie",
+    pt: "desenho animado",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "7g1b9qwe",
+    en: "serious",
+    pt: "sério(a)",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "8f6m5klt",
+    en: "subject",
+    pt: "assunto, matéria (escola)",
+    category: "Connection - 1 - A",
+  },
+  { id: "9p7r2djc", en: "end", pt: "fim", category: "Connection - 1 - A" },
+  {
+    id: "0x8n3yqv",
+    en: "beginning",
+    pt: "início",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "1z4h6tkl",
+    en: "(movie) star, to star",
+    pt: "estrela, estrelar",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "2r9b7mqa",
+    en: "another",
+    pt: "outro(a)",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "3n1c8zpw",
+    en: "the other",
+    pt: "(o/a) outro(a)",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "4j2l6xev",
+    en: "character",
+    pt: "personagem",
+    category: "Connection - 1 - A",
+  },
+  { id: "5v3h9bpt", en: "scene", pt: "cena", category: "Connection - 1 - A" },
+  { id: "6m8k1fdq", en: "play", pt: "peça", category: "Connection - 1 - A" },
+  {
+    id: "7a4y9jwu",
+    en: "playwright",
+    pt: "dramaturgo(a)",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "8s3e7rnl",
+    en: "interesting",
+    pt: "interessante",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "9t6h2kqp",
+    en: "weird",
+    pt: "estranho(a)",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "0d9b8xfl",
+    en: "scary",
+    pt: "assustador(a)",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "1k3m5vcn",
+    en: "famous",
+    pt: "famoso(a)",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "2j8y9tqp",
+    en: "funny",
+    pt: "engraçado(a)",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "3p5r6lwj",
+    en: "exciting",
+    pt: "emocionante, empolgante",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "4h2v8kzm",
+    en: "short",
+    pt: "curto(a)",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "5g9x7bqt",
+    en: "(the) same",
+    pt: "(o) mesmo(a)",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "6m4n2jpr",
+    en: "romantic",
+    pt: "romântico(a)",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "7k1h9btq",
+    en: "important",
+    pt: "importante",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "8f5v3zpl",
+    en: "different (from)",
+    pt: "diferente (de)",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "9r2n8kjc",
+    en: "suspense",
+    pt: "suspense",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "0d6b4qyt",
+    en: "artist",
+    pt: "artista",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "1p3m7xwl",
+    en: "composer",
+    pt: "compositor(a)",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "2s9h8kvr",
+    en: "producer",
+    pt: "produtor(a)",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "3c4n1qmt",
+    en: "director",
+    pt: "diretor(a)",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "4b8v7jkp",
+    en: "classic",
+    pt: "clássico",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "5h9x6dql",
+    en: "writer",
+    pt: "escritor(a)",
+    category: "Connection - 1 - A",
+  },
+  {
+    id: "6r2f3pny",
+    en: "long",
+    pt: "longo(a)",
+    category: "Connection - 1 - A",
+  },
+];
 
 // --- Utilities
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -25,10 +269,12 @@ const load = (): Card[] => {
 
 // --- Main App
 export default function App() {
-  const [cards, setCards] = useState<Card[]>(load());
+  const [cardsLocal, setCardsLocal] = useState<Card[]>(load());
   const [tab, setTab] = useState<"create" | "play">("create");
 
-  useEffect(() => save(cards), [cards]);
+  const cards = useMemo(() => [...defaultCards, ...cardsLocal], [cardsLocal]);
+
+  // useEffect(() => save(cardsLocal), [cardsLocal]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 px-4 py-8">
@@ -58,7 +304,7 @@ export default function App() {
         </header>
 
         {tab === "create" ? (
-          <CreateTab cards={cards} setCards={setCards} />
+          <CreateTab cards={cards} setCardsLocal={setCardsLocal} />
         ) : (
           <PlayTab cards={cards} />
         )}
@@ -75,10 +321,10 @@ export default function App() {
 // --- Create / Manage
 function CreateTab({
   cards,
-  setCards,
+  setCardsLocal,
 }: {
   cards: Card[];
-  setCards: React.Dispatch<React.SetStateAction<Card[]>>;
+  setCardsLocal: React.Dispatch<React.SetStateAction<Card[]>>;
 }) {
   const [en, setEn] = useState("");
   const [pt, setPt] = useState("");
@@ -88,7 +334,7 @@ function CreateTab({
   const categories = useMemo(
     () =>
       Array.from(
-        new Set(cards.map((c) => (c.cat || "").trim()).filter(Boolean))
+        new Set(cards.map((c) => (c.category || "").trim()).filter(Boolean))
       ).sort(),
     [cards]
   );
@@ -101,19 +347,29 @@ function CreateTab({
         !q ||
         c.en.toLowerCase().includes(q) ||
         c.pt.toLowerCase().includes(q) ||
-        (c.cat || "").toLowerCase().includes(q);
+        (c.category || "").toLowerCase().includes(q);
       const matchCat =
-        searchCat === "__all" ? true : (c.cat || "") === searchCat;
+        searchCat === "__all" ? true : (c.category || "") === searchCat;
       return matchText && matchCat;
     });
   }, [cards, search, searchCat]);
 
   function addCard() {
     if (!en.trim() || !pt.trim()) return;
-    setCards((prev) => [
-      { id: uid(), en: en.trim(), pt: pt.trim(), cat: cat.trim() || undefined },
-      ...prev,
-    ]);
+    setCardsLocal((prev) => {
+      const newCards = [
+        {
+          id: uid(),
+          en: en.trim(),
+          pt: pt.trim(),
+          category: cat.trim() || undefined,
+        },
+        ...prev,
+      ];
+
+      save(newCards);
+      return newCards;
+    });
     setEn("");
     setPt("");
     setCat("");
@@ -127,13 +383,13 @@ function CreateTab({
     try {
       const data = JSON.parse(jsonText) as
         | Card[]
-        | { en: string; pt: string; cat?: string }[];
+        | { en: string; pt: string; category?: string }[];
       const normalized: Card[] = (data as any[])
         .map((c: any) => ({
           id: c.id || uid(),
           en: String(c.en || ""),
           pt: String(c.pt || ""),
-          cat: c.cat ? String(c.cat) : undefined,
+          category: c.category ? String(c.category) : undefined,
         }))
         .filter((c) => c.en && c.pt);
       setCards((prev) => [...normalized, ...prev]);
@@ -235,10 +491,10 @@ function CreateTab({
             <div className="text-lg font-semibold">{c.en}</div>
             <div className="text-sm text-slate-500">PT</div>
             <div className="text-lg">{c.pt}</div>
-            {c.cat ? (
+            {c.category ? (
               <div className="mt-1">
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 border">
-                  {c.cat}
+                  {c.category}
                 </span>
               </div>
             ) : null}
@@ -326,7 +582,7 @@ function PlayTab({ cards }: { cards: Card[] }) {
   const categories = useMemo(
     () =>
       Array.from(
-        new Set(cards.map((c) => (c.cat || "").trim()).filter(Boolean))
+        new Set(cards.map((c) => (c.category || "").trim()).filter(Boolean))
       ).sort(),
     [cards]
   );
@@ -336,7 +592,7 @@ function PlayTab({ cards }: { cards: Card[] }) {
     return cards
       .map((c, i) => ({ c, i }))
       .filter((x) =>
-        selectedCat === "__all" ? true : (x.c.cat || "") === selectedCat
+        selectedCat === "__all" ? true : (x.c.category || "") === selectedCat
       );
   }, [cards, selectedCat]);
 
@@ -420,6 +676,16 @@ function PlayTab({ cards }: { cards: Card[] }) {
       ? cards[currentIdx as number]
       : undefined;
 
+  const progress = useMemo(
+    () =>
+      order.reduce(
+        (acc, i) => (answers[cards[i]?.id] !== undefined ? acc + 1 : acc),
+        0
+      ),
+    [order, answers, cards]
+  );
+  const isDone = order.length > 0 && progress >= order.length;
+
   // --- Fala estável (com retries e pequeno delay após cancel)
   const speakText = useCallback(
     (text: string) => {
@@ -475,10 +741,11 @@ function PlayTab({ cards }: { cards: Card[] }) {
 
   // Fala automático ao mostrar inglês
   useEffect(() => {
+    if (isDone) return;
     if (current && !revealed && autoSpeak) {
       speakText(current.en);
     }
-  }, [current, revealed, autoSpeak, speakText]);
+  }, [current, revealed, autoSpeak, speakText, isDone]);
 
   // Atalhos
   useEffect(() => {
@@ -526,11 +793,6 @@ function PlayTab({ cards }: { cards: Card[] }) {
   }
 
   // Resumo quando termina
-  const progress = order.reduce(
-    (acc, i) => (answers[cards[i]?.id] !== undefined ? acc + 1 : acc),
-    0
-  );
-  const isDone = progress >= order.length;
   if (isDone) {
     const wrong = order.filter((i) => answers[cards[i]?.id] === false);
     const right = order.filter((i) => answers[cards[i]?.id] === true);
@@ -570,9 +832,9 @@ function PlayTab({ cards }: { cards: Card[] }) {
                     <div className="font-semibold">{c.en}</div>
                     <div className="text-xs text-slate-500 mt-1">PT</div>
                     <div>{c.pt}</div>
-                    {c.cat ? (
+                    {c.category ? (
                       <div className="mt-1 text-[11px] text-slate-500">
-                        Categoria: {c.cat}
+                        Categoria: {c.category}
                       </div>
                     ) : null}
                   </li>
@@ -593,9 +855,9 @@ function PlayTab({ cards }: { cards: Card[] }) {
                     <div className="font-semibold">{c.en}</div>
                     <div className="text-xs text-slate-500 mt-1">PT</div>
                     <div>{c.pt}</div>
-                    {c.cat ? (
+                    {c.category ? (
                       <div className="mt-1 text-[11px] text-slate-500">
-                        Categoria: {c.cat}
+                        Categoria: {c.category}
                       </div>
                     ) : null}
                   </li>
