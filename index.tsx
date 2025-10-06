@@ -35,7 +35,7 @@ export default function App() {
       <div className="mx-auto max-w-5xl">
         <header className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            Flashcards EN↔PT
+            Flashcards
           </h1>
           <nav className="flex gap-2">
             <button
