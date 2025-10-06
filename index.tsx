@@ -718,37 +718,17 @@ function CardSwipe({
   pt,
   revealed,
   setRevealed,
-  voices,
-  selectedVoiceURI,
-  rate,
+  speak,
 }: {
   en: string;
   pt: string;
   revealed: boolean;
   setRevealed: (b: boolean) => void;
-  voices: SpeechSynthesisVoice[];
-  selectedVoiceURI: string;
-  rate: number;
+  speak: (text: string) => void;
 }) {
   function speakAgain(e?: React.MouseEvent) {
     e?.stopPropagation();
-    const synth = window?.speechSynthesis;
-    if (!synth) return;
-
-    const speak = () => {
-      const u = new SpeechSynthesisUtterance(en);
-      const voice = voices.find((v) => v.voiceURI === selectedVoiceURI);
-      u.lang = "en-US";
-      if (voice) u.voice = voice;
-      u.rate = rate;
-      console.log("voice", u);
-      console.log("synth", synth);
-      synth.speak(u);
-    };
-
-    synth.cancel();
-    if (synth.paused) synth.resume();
-    setTimeout(speak, 0);
+    speak(en);
   }
 
   function onClickToggle() {
