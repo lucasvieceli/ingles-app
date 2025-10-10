@@ -6,252 +6,9 @@ import React, {
   useState,
 } from "react";
 
+import { defaultCards } from "./src/cards";
 // --- Types
-type Card = { id: string; en: string; pt: string; category?: string };
-
-const defaultCards: Card[] = [
-  { id: "1a9x8kzq", en: "action", pt: "ação", category: "Connection - 1 - A" },
-  { id: "2b7y5qsd", en: "drama", pt: "drama", category: "Connection - 1 - A" },
-  {
-    id: "3n2p6lrf",
-    en: "romance",
-    pt: "romance",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "4r8t2zkw",
-    en: "adventure",
-    pt: "aventura",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "5c6m7ghe",
-    en: "comedy",
-    pt: "comédia",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "6p4k8djr",
-    en: "documentary",
-    pt: "documentário",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "7x2v5bce",
-    en: "horror",
-    pt: "horror",
-    category: "Connection - 1 - A",
-  },
-  { id: "8j9s6tlf", en: "crime", pt: "crime", category: "Connection - 1 - A" },
-  {
-    id: "9l1h3fdq",
-    en: "mystery",
-    pt: "mistério",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "0k2f8wue",
-    en: "sci-fi",
-    pt: "ficção científica",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "1v9e4qmt",
-    en: "musical",
-    pt: "musical",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "2r8w5yzp",
-    en: "thriller",
-    pt: "suspense",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "3h7d1bvx",
-    en: "superhero",
-    pt: "super-herói",
-    category: "Connection - 1 - A",
-  },
-  { id: "4j2a9msl", en: "war", pt: "guerra", category: "Connection - 1 - A" },
-  {
-    id: "5p6z8kdm",
-    en: "western",
-    pt: "faroeste",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "6t3h4cvn",
-    en: "cartoon, animated movie",
-    pt: "desenho animado",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "7g1b9qwe",
-    en: "serious",
-    pt: "sério(a)",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "8f6m5klt",
-    en: "subject",
-    pt: "assunto, matéria (escola)",
-    category: "Connection - 1 - A",
-  },
-  { id: "9p7r2djc", en: "end", pt: "fim", category: "Connection - 1 - A" },
-  {
-    id: "0x8n3yqv",
-    en: "beginning",
-    pt: "início",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "1z4h6tkl",
-    en: "(movie) star, to star",
-    pt: "estrela, estrelar",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "2r9b7mqa",
-    en: "another",
-    pt: "outro(a)",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "3n1c8zpw",
-    en: "the other",
-    pt: "(o/a) outro(a)",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "4j2l6xev",
-    en: "character",
-    pt: "personagem",
-    category: "Connection - 1 - A",
-  },
-  { id: "5v3h9bpt", en: "scene", pt: "cena", category: "Connection - 1 - A" },
-  { id: "6m8k1fdq", en: "play", pt: "peça", category: "Connection - 1 - A" },
-  {
-    id: "7a4y9jwu",
-    en: "playwright",
-    pt: "dramaturgo(a)",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "8s3e7rnl",
-    en: "interesting",
-    pt: "interessante",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "9t6h2kqp",
-    en: "weird",
-    pt: "estranho(a)",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "0d9b8xfl",
-    en: "scary",
-    pt: "assustador(a)",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "1k3m5vcn",
-    en: "famous",
-    pt: "famoso(a)",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "2j8y9tqp",
-    en: "funny",
-    pt: "engraçado(a)",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "3p5r6lwj",
-    en: "exciting",
-    pt: "emocionante, empolgante",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "4h2v8kzm",
-    en: "short",
-    pt: "curto(a)",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "5g9x7bqt",
-    en: "(the) same",
-    pt: "(o) mesmo(a)",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "6m4n2jpr",
-    en: "romantic",
-    pt: "romântico(a)",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "7k1h9btq",
-    en: "important",
-    pt: "importante",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "8f5v3zpl",
-    en: "different (from)",
-    pt: "diferente (de)",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "9r2n8kjc",
-    en: "suspense",
-    pt: "suspense",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "0d6b4qyt",
-    en: "artist",
-    pt: "artista",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "1p3m7xwl",
-    en: "composer",
-    pt: "compositor(a)",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "2s9h8kvr",
-    en: "producer",
-    pt: "produtor(a)",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "3c4n1qmt",
-    en: "director",
-    pt: "diretor(a)",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "4b8v7jkp",
-    en: "classic",
-    pt: "clássico",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "5h9x6dql",
-    en: "writer",
-    pt: "escritor(a)",
-    category: "Connection - 1 - A",
-  },
-  {
-    id: "6r2f3pny",
-    en: "long",
-    pt: "longo(a)",
-    category: "Connection - 1 - A",
-  },
-];
+export type Card = { id: string; en: string; pt: string; category?: string };
 
 // --- Utilities
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -266,6 +23,9 @@ const load = (): Card[] => {
     return [];
   }
 };
+
+const normalizeLang = (value?: string) =>
+  (value || "").toLowerCase().replace(/_/g, "-");
 
 // --- Main App
 export default function App() {
@@ -330,6 +90,7 @@ function CreateTab({
   const [pt, setPt] = useState("");
   const [cat, setCat] = useState("");
   const [search, setSearch] = useState("");
+  const [expandedCat, setExpandedCat] = useState<string | null>(null);
 
   const categories = useMemo(
     () =>
@@ -354,6 +115,37 @@ function CreateTab({
     });
   }, [cards, search, searchCat]);
 
+  const grouped = useMemo(
+    () =>
+      Array.from(
+        filtered.reduce((acc, card) => {
+          const key = (card.category || "").trim() || "__none";
+          if (!acc.has(key)) acc.set(key, [] as Card[]);
+          acc.get(key)!.push(card);
+          return acc;
+        }, new Map<string, Card[]>())
+      )
+        .map(([key, groupCards]) => ({
+          key,
+          label: key === "__none" ? "Sem categoria" : key,
+          cards: groupCards,
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label, "pt-BR")),
+    [filtered]
+  );
+
+  useEffect(() => {
+    if (expandedCat && !grouped.some((group) => group.key === expandedCat)) {
+      setExpandedCat(null);
+    }
+  }, [grouped, expandedCat]);
+
+  useEffect(() => {
+    if (searchCat !== "__all") {
+      setExpandedCat(searchCat);
+    }
+  }, [searchCat]);
+
   function addCard() {
     if (!en.trim() || !pt.trim()) return;
     setCardsLocal((prev) => {
@@ -376,7 +168,11 @@ function CreateTab({
   }
 
   function removeCard(id: string) {
-    setCards((prev) => prev.filter((c) => c.id !== id));
+    setCardsLocal((prev) => {
+      const next = prev.filter((c) => c.id !== id);
+      save(next);
+      return next;
+    });
   }
 
   function importJson(jsonText: string) {
@@ -392,7 +188,11 @@ function CreateTab({
           category: c.category ? String(c.category) : undefined,
         }))
         .filter((c) => c.en && c.pt);
-      setCards((prev) => [...normalized, ...prev]);
+      setCardsLocal((prev) => {
+        const next = [...normalized, ...prev];
+        save(next);
+        return next;
+      });
     } catch (e) {
       alert("JSON inválido");
     }
@@ -440,7 +240,7 @@ function CreateTab({
             <option key={c} value={c} />
           ))}
         </datalist>
-        <div className="flex gap-2 pt-2">
+        <div className="flex gap-2 pt-2   flex-col sm:flex-row">
           <button
             onClick={addCard}
             className="px-4 py-2 rounded-xl bg-slate-900 text-white font-medium"
@@ -457,13 +257,13 @@ function CreateTab({
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex items-center gap-2">
+      <div className="flex md:items-center justify-between gap-2 flex-wrap flex-col sm:flex-row">
+        <div className="flex md:items-center gap-2 flex-col sm:flex-row">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar…"
-            className="border rounded-xl px-3 py-2 w-60"
+            className="border rounded-xl px-3 py-2 sm:max-w-60 w-full"
           />
           <select
             value={searchCat}
@@ -481,34 +281,64 @@ function CreateTab({
         <h2 className="text-lg font-semibold">Seus cards ({cards.length})</h2>
       </div>
 
-      <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {filtered.map((c) => (
-          <li
-            key={c.id}
-            className="bg-white rounded-2xl shadow-sm p-4 flex flex-col gap-2"
-          >
-            <div className="text-sm text-slate-500">EN</div>
-            <div className="text-lg font-semibold">{c.en}</div>
-            <div className="text-sm text-slate-500">PT</div>
-            <div className="text-lg">{c.pt}</div>
-            {c.category ? (
-              <div className="mt-1">
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 border">
-                  {c.category}
-                </span>
-              </div>
-            ) : null}
-            <div className="pt-2 flex justify-end">
-              <button
-                onClick={() => removeCard(c.id)}
-                className="text-sm px-3 py-1 rounded-lg border"
+      {grouped.length ? (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {grouped.map(({ key, label, cards: groupedCards }) => {
+            const isOpen = expandedCat === key;
+            return (
+              <div
+                key={key}
+                className="bg-white rounded-2xl shadow-sm p-4 flex flex-col gap-3"
               >
-                Excluir
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setExpandedCat((prev) => (prev === key ? null : key))
+                  }
+                  className="text-left"
+                >
+                  <div className="text-xs uppercase tracking-wide text-slate-500">
+                    Categoria
+                  </div>
+                  <div className="mt-1 text-xl font-semibold">{label}</div>
+                  <div className="text-xs text-slate-400 mt-2">
+                    {groupedCards.length}{" "}
+                    {groupedCards.length === 1 ? "card" : "cards"}
+                  </div>
+                </button>
+
+                {isOpen ? (
+                  <ul className="grid gap-3">
+                    {groupedCards.map((c) => (
+                      <li
+                        key={c.id}
+                        className="border rounded-2xl p-3 flex flex-col gap-2"
+                      >
+                        <div className="text-xs text-slate-500">EN</div>
+                        <div className="text-lg font-semibold">{c.en}</div>
+                        <div className="text-xs text-slate-500">PT</div>
+                        <div className="text-base">{c.pt}</div>
+                        <div className="pt-2 flex justify-end">
+                          <button
+                            onClick={() => removeCard(c.id)}
+                            className="text-xs px-3 py-1 rounded-lg border"
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="text-sm text-slate-500">
+          Nenhum card encontrado para os filtros atuais.
+        </div>
+      )}
     </div>
   );
 }
@@ -555,8 +385,11 @@ function PlayTab({ cards }: { cards: Card[] }) {
     () => localStorage.getItem("flashcards_selectedCat") || "__all"
   );
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [selectedVoiceURI, setSelectedVoiceURI] = useState(
-    () => localStorage.getItem("flashcards_voice") || ""
+  const [selectedVoiceURIEn, setSelectedVoiceURIEn] = useState(
+    () => localStorage.getItem("flashcards_voice_en") || ""
+  );
+  const [selectedVoiceURIPt, setSelectedVoiceURIPt] = useState(
+    () => localStorage.getItem("flashcards_voice_pt") || ""
   );
   const [rate, setRate] = useState(() =>
     Number(localStorage.getItem("flashcards_rate") || 1)
@@ -564,13 +397,17 @@ function PlayTab({ cards }: { cards: Card[] }) {
   const [autoSpeak, setAutoSpeak] = useState(
     () => localStorage.getItem("flashcards_autoSpeak") !== "false"
   );
+  const voiceDefaultsApplied = useRef(false);
 
   useEffect(() => {
     localStorage.setItem("flashcards_selectedCat", selectedCat);
   }, [selectedCat]);
   useEffect(() => {
-    localStorage.setItem("flashcards_voice", selectedVoiceURI);
-  }, [selectedVoiceURI]);
+    localStorage.setItem("flashcards_voice_en", selectedVoiceURIEn);
+  }, [selectedVoiceURIEn]);
+  useEffect(() => {
+    localStorage.setItem("flashcards_voice_pt", selectedVoiceURIPt);
+  }, [selectedVoiceURIPt]);
   useEffect(() => {
     localStorage.setItem("flashcards_rate", String(rate));
   }, [rate]);
@@ -585,6 +422,14 @@ function PlayTab({ cards }: { cards: Card[] }) {
         new Set(cards.map((c) => (c.category || "").trim()).filter(Boolean))
       ).sort(),
     [cards]
+  );
+  const portugueseVoices = useMemo(
+    () => voices.filter((v) => normalizeLang(v.lang).startsWith("pt")),
+    [voices]
+  );
+  const englishVoices = useMemo(
+    () => voices.filter((v) => normalizeLang(v.lang).startsWith("en")),
+    [voices]
   );
 
   // Conjunto jogável conforme a categoria
@@ -601,10 +446,20 @@ function PlayTab({ cards }: { cards: Card[] }) {
     function refreshVoices() {
       const list = window.speechSynthesis.getVoices();
       setVoices(list);
-      if (!selectedVoiceURI && list.length) {
-        const pick =
-          list.find((v) => v.lang?.toLowerCase().startsWith("en")) ?? list[0];
-        if (pick) setSelectedVoiceURI(pick.voiceURI);
+      if (!voiceDefaultsApplied.current && list.length) {
+        if (!selectedVoiceURIEn) {
+          const enPick =
+            list.find((v) => normalizeLang(v.lang).startsWith("en-us")) ??
+            list.find((v) => normalizeLang(v.lang).startsWith("en"));
+          if (enPick) setSelectedVoiceURIEn(enPick.voiceURI);
+        }
+        if (!selectedVoiceURIPt) {
+          const ptPick =
+            list.find((v) => normalizeLang(v.lang).startsWith("pt-br")) ??
+            list.find((v) => normalizeLang(v.lang).startsWith("pt"));
+          if (ptPick) setSelectedVoiceURIPt(ptPick.voiceURI);
+        }
+        voiceDefaultsApplied.current = true;
       }
     }
     refreshVoices();
@@ -620,7 +475,7 @@ function PlayTab({ cards }: { cards: Card[] }) {
         (window.speechSynthesis as any).onvoiceschanged = null;
       };
     }
-  }, [selectedVoiceURI]);
+  }, [selectedVoiceURIEn, selectedVoiceURIPt]);
 
   // Embaralha ao mudar os jogáveis ou a categoria
   useEffect(() => {
@@ -688,7 +543,7 @@ function PlayTab({ cards }: { cards: Card[] }) {
 
   // --- Fala estável (com retries e pequeno delay após cancel)
   const speakText = useCallback(
-    (text: string) => {
+    (text: string, langHint: "en" | "pt" = "en") => {
       const synth = window?.speechSynthesis;
       if (!synth) return;
 
@@ -704,20 +559,61 @@ function PlayTab({ cards }: { cards: Card[] }) {
 
         const utter = new SpeechSynthesisUtterance(text);
 
-        const preferred = pool.find((v) => v.voiceURI === selectedVoiceURI);
-        const english = pool.find((v) =>
-          v.lang?.toLowerCase().startsWith("en")
+        const hint = langHint === "pt" ? "pt" : "en";
+        const targetVoiceURI =
+          hint === "pt" ? selectedVoiceURIPt : selectedVoiceURIEn;
+        const preferred = pool.find((v) => v.voiceURI === targetVoiceURI);
+
+        const localePriority =
+          hint === "pt"
+            ? ["pt-br", "pt_br", "pt-pt", "pt"]
+            : ["en-us", "en_us", "en-gb", "en"];
+        const secondaryLocale =
+          hint === "pt"
+            ? ["en-us", "en", "en-gb"]
+            : ["pt-br", "pt", "pt-pt"];
+
+        const candidates: SpeechSynthesisVoice[] = [];
+        const pushCandidate = (voice?: SpeechSynthesisVoice) => {
+          if (
+            voice &&
+            !candidates.some((item) => item.voiceURI === voice.voiceURI)
+          ) {
+            candidates.push(voice);
+          }
+        };
+
+        const findByLocale = (localePrefix: string) =>
+          pool.find((v) =>
+            normalizeLang(v.lang).startsWith(localePrefix.toLowerCase())
+          );
+
+        pushCandidate(
+          preferred &&
+            normalizeLang(preferred.lang).startsWith(
+              localePriority[0] || hint
+            )
+            ? preferred
+            : undefined
         );
-        const voice = preferred || english || pool[0];
+        localePriority.forEach((locale) =>
+          pushCandidate(findByLocale(locale))
+        );
+        pushCandidate(preferred);
+        secondaryLocale.forEach((locale) =>
+          pushCandidate(findByLocale(locale))
+        );
+
+        const voice = candidates[0] || pool[0];
 
         if (voice) {
           utter.voice = voice;
-          utter.lang = voice.lang || "en-US";
+          utter.lang =
+            voice.lang || (hint === "pt" ? "pt-BR" : "en-US");
         } else {
-          utter.lang = "en-US";
+          utter.lang = hint === "pt" ? "pt-BR" : "en-US";
         }
         utter.pitch = 1;
-        console.log("utter", utter);
 
         utter.rate = rate || 1;
 
@@ -736,15 +632,15 @@ function PlayTab({ cards }: { cards: Card[] }) {
 
       run();
     },
-    [voices, selectedVoiceURI, rate]
+    [voices, selectedVoiceURIEn, selectedVoiceURIPt, rate]
   );
 
-  // Fala automático ao mostrar inglês
+  // Fala automático conforme o lado visível do card
   useEffect(() => {
-    if (isDone) return;
-    if (current && !revealed && autoSpeak) {
-      speakText(current.en);
-    }
+    if (isDone || !current || !autoSpeak) return;
+    const lang = revealed ? "en" : "pt";
+    const text = revealed ? current.en : current.pt;
+    speakText(text, lang);
   }, [current, revealed, autoSpeak, speakText, isDone]);
 
   // Atalhos
@@ -910,19 +806,44 @@ function PlayTab({ cards }: { cards: Card[] }) {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <label className="text-sm">Voz</label>
+          <label className="text-sm">Voz PT</label>
           <select
-            value={selectedVoiceURI}
-            onChange={(e) => setSelectedVoiceURI(e.target.value)}
+            value={selectedVoiceURIPt}
+            onChange={(e) => setSelectedVoiceURIPt(e.target.value)}
             className="border rounded px-2 py-1 text-sm"
           >
-            {voices
-              .filter((v) => v.lang?.toLowerCase().startsWith("en"))
-              .map((v) => (
+            <option value="">Automática</option>
+            {portugueseVoices.length ? (
+              portugueseVoices.map((v) => (
                 <option key={v.voiceURI} value={v.voiceURI}>
                   {v.name} • {v.lang}
                 </option>
-              ))}
+              ))
+            ) : (
+              <option value="__none" disabled>
+                Sem voz PT disponível
+              </option>
+            )}
+          </select>
+
+          <label className="text-sm ml-2">Voz EN</label>
+          <select
+            value={selectedVoiceURIEn}
+            onChange={(e) => setSelectedVoiceURIEn(e.target.value)}
+            className="border rounded px-2 py-1 text-sm"
+          >
+            <option value="">Automática</option>
+            {englishVoices.length ? (
+              englishVoices.map((v) => (
+                <option key={v.voiceURI} value={v.voiceURI}>
+                  {v.name} • {v.lang}
+                </option>
+              ))
+            ) : (
+              <option value="__none" disabled>
+                Sem voz EN disponível
+              </option>
+            )}
           </select>
 
           <label className="text-sm ml-2">Velocidade</label>
@@ -1024,12 +945,23 @@ function CardSwipe({
   pt: string;
   revealed: boolean;
   setRevealed: (b: boolean) => void;
-  speak: (text: string) => void;
+  speak: (text: string, langHint?: "en" | "pt") => void;
 }) {
-  function speakAgain(e?: React.MouseEvent) {
-    e?.stopPropagation();
-    speak(en);
-  }
+  const speakPortuguese = useCallback(
+    (e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      speak(pt, "pt");
+    },
+    [pt, speak]
+  );
+
+  const speakEnglish = useCallback(
+    (e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      speak(en, "en");
+    },
+    [en, speak]
+  );
 
   function onClickToggle() {
     setRevealed(!revealed);
@@ -1040,15 +972,15 @@ function CardSwipe({
       className="relative h-[300px] w-full max-w-xl mx-auto cursor-pointer overflow-hidden border border-slate-200"
       onClick={onClickToggle}
     >
-      {/* Base card (EN) */}
+      {/* Base card (PT) */}
       <div className="absolute inset-0 bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center justify-center z-0">
         <span className="text-xs uppercase tracking-wide text-slate-400">
-          Inglês
+          Português
         </span>
         <div className="mt-2 text-2xl sm:text-3xl font-bold text-center break-words flex items-center gap-3">
-          {en}
+          {pt}
           <button
-            onClick={speakAgain}
+            onClick={speakPortuguese}
             className="ml-2 p-2 rounded-full bg-slate-200 hover:bg-slate-300"
             title="Repetir pronúncia"
           >
@@ -1057,17 +989,24 @@ function CardSwipe({
         </div>
       </div>
 
-      {/* PT overlay com fade */}
+      {/* EN overlay com fade */}
       <div
         className={`absolute inset-0 rounded-2xl p-6 flex flex-col items-center justify-center bg-slate-900 text-white transition-opacity duration-150 ${
           revealed ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-10"
         }`}
       >
         <span className="text-xs uppercase tracking-wide text-white/70">
-          Português
+          Inglês
         </span>
-        <div className="mt-2 text-2xl sm:text-3xl font-semibold text-center break-words">
-          {pt}
+        <div className="mt-2 text-2xl sm:text-3xl font-semibold text-center break-words flex items-center gap-3">
+          {en}
+          <button
+            onClick={speakEnglish}
+            className="ml-2 p-2 rounded-full bg-white/20 hover:bg-white/30"
+            title="Repetir pronúncia"
+          >
+            🔊
+          </button>
         </div>
         <div className="mt-3 text-xs opacity-70">
           Clique novamente para ocultar
