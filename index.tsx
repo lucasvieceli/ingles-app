@@ -13,6 +13,7 @@ export type Card = { id: string; en: string; pt: string; category?: string };
 // --- Utilities
 const uid = () => Math.random().toString(36).slice(2, 10);
 const LS_KEY = "flashcards_en_pt_v1";
+const LS_SCORE = "flashcards_score_v1";
 const save = (cards: Card[]) =>
   localStorage.setItem(LS_KEY, JSON.stringify(cards));
 const load = (): Card[] => {
@@ -427,12 +428,19 @@ function PlayTab({ cards }: { cards: Card[] }) {
   });
   const [isCatDialogOpen, setIsCatDialogOpen] = useState(false);
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
+  const [score, setScore] = useState(() => {
+    const raw = Number(localStorage.getItem(LS_SCORE));
+    return Number.isFinite(raw) ? raw : 0;
+  });
+  const [scoreChange, setScoreChange] = useState<"up" | "down" | null>(null);
+  const [scoreDeltaDisplay, setScoreDeltaDisplay] = useState<number | null>(
+    null
+  );
+  const scoreTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     const sanitized = Array.from(
-      new Set(
-        selectedCats.map((cat) => cat.trim()).filter(Boolean)
-      )
+      new Set(selectedCats.map((cat) => cat.trim()).filter(Boolean))
     );
     if (
       sanitized.length !== selectedCats.length ||
@@ -471,6 +479,16 @@ function PlayTab({ cards }: { cards: Card[] }) {
       localStorage.removeItem("flashcards_voice_pt");
     }
   }, [selectedVoicePt]);
+  useEffect(() => {
+    localStorage.setItem(LS_SCORE, String(score));
+  }, [score]);
+  useEffect(() => {
+    return () => {
+      if (scoreTimeoutRef.current !== null) {
+        window.clearTimeout(scoreTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Lista de categorias existentes
   const categories = useMemo(
@@ -499,13 +517,33 @@ function PlayTab({ cards }: { cards: Card[] }) {
   }, [categories]);
   useEffect(() => {
     if (!voices.length) return;
-    if (selectedVoiceEn && !voices.some((v) => v.voiceURI === selectedVoiceEn)) {
+    if (
+      selectedVoiceEn &&
+      !voices.some((v) => v.voiceURI === selectedVoiceEn)
+    ) {
       setSelectedVoiceEn(null);
     }
-    if (selectedVoicePt && !voices.some((v) => v.voiceURI === selectedVoicePt)) {
+    if (
+      selectedVoicePt &&
+      !voices.some((v) => v.voiceURI === selectedVoicePt)
+    ) {
       setSelectedVoicePt(null);
     }
   }, [voices, selectedVoiceEn, selectedVoicePt]);
+
+  const applyScoreDelta = useCallback((delta: number) => {
+    if (!delta) return;
+    setScore((prev) => prev + delta);
+    setScoreDeltaDisplay(delta);
+    setScoreChange(delta > 0 ? "up" : "down");
+    if (scoreTimeoutRef.current !== null) {
+      window.clearTimeout(scoreTimeoutRef.current);
+    }
+    scoreTimeoutRef.current = window.setTimeout(() => {
+      setScoreChange(null);
+      setScoreDeltaDisplay(null);
+    }, 800);
+  }, []);
 
   // Conjunto jogável conforme a categoria
   const playable = useMemo(() => {
@@ -609,6 +647,23 @@ function PlayTab({ cards }: { cards: Card[] }) {
     setRevealed(false);
   }
 
+  function handleAnswer(isCorrect: boolean) {
+    if (!current) return;
+    const cardId = current.id;
+    const prevValue = answers[cardId];
+    if (prevValue !== isCorrect) {
+      const prevScoreContribution =
+        prevValue === true ? 2 : prevValue === false ? -2 : 0;
+      const nextScoreContribution = isCorrect ? 2 : -2;
+      const delta = nextScoreContribution - prevScoreContribution;
+      if (delta !== 0) {
+        applyScoreDelta(delta);
+      }
+      setAnswers((prev) => ({ ...prev, [cardId]: isCorrect }));
+    }
+    next();
+  }
+
   // current seguro
   const hasOrder = order.length > 0;
   const safeIndex = hasOrder
@@ -634,7 +689,41 @@ function PlayTab({ cards }: { cards: Card[] }) {
   const totalCards = order.length;
   const remainingCards = Math.max(totalCards - progress, 0);
   const progressPercent =
-    totalCards > 0 ? Math.min(100, Math.max(0, (progress / totalCards) * 100)) : 0;
+    totalCards > 0
+      ? Math.min(100, Math.max(0, (progress / totalCards) * 100))
+      : 0;
+
+  const scoreNumberClass = `text-lg font-semibold transform transition duration-300 ${
+    scoreChange === "up"
+      ? "text-green-600 scale-110"
+      : scoreChange === "down"
+      ? "text-red-600 scale-90"
+      : "text-slate-900 scale-100"
+  }`;
+  const scoreDeltaClass = `text-xs font-semibold transition-opacity duration-300 ${
+    scoreDeltaDisplay === null
+      ? "opacity-0 text-slate-400"
+      : scoreDeltaDisplay > 0
+      ? "text-green-600 opacity-100"
+      : "text-red-600 opacity-100"
+  }`;
+  const scoreDeltaText =
+    scoreDeltaDisplay !== null
+      ? scoreDeltaDisplay > 0
+        ? `+${scoreDeltaDisplay}`
+        : `${scoreDeltaDisplay}`
+      : "+0";
+  const scoreSection = (
+    <div className="flex items-center justify-center sm:justify-start gap-3 px-3 py-1.5 bg-white rounded-xl border shadow-sm mx-auto sm:mx-0">
+      <div className="text-xs uppercase tracking-wide text-slate-500 text-center sm:text-left">
+        Pontuação
+      </div>
+      <div className="flex items-center gap-2">
+        <span className={scoreNumberClass}>{score}</span>
+        <span className={scoreDeltaClass}>{scoreDeltaText}</span>
+      </div>
+    </div>
+  );
 
   // --- Fala estável (com retries e pequeno delay após cancel)
   const speakText = useCallback(
@@ -665,9 +754,7 @@ function PlayTab({ cards }: { cards: Card[] }) {
             ? ["pt-br", "pt_br", "pt-pt", "pt"]
             : ["en-us", "en_us", "en-gb", "en"];
         const secondaryLocale =
-          hint === "pt"
-            ? ["en-us", "en", "en-gb"]
-            : ["pt-br", "pt", "pt-pt"];
+          hint === "pt" ? ["en-us", "en", "en-gb"] : ["pt-br", "pt", "pt-pt"];
 
         const candidates: SpeechSynthesisVoice[] = [];
         const pushCandidate = (voice?: SpeechSynthesisVoice) => {
@@ -685,9 +772,7 @@ function PlayTab({ cards }: { cards: Card[] }) {
           );
 
         pushCandidate(preferredVoice);
-        localePriority.forEach((locale) =>
-          pushCandidate(findByLocale(locale))
-        );
+        localePriority.forEach((locale) => pushCandidate(findByLocale(locale)));
         secondaryLocale.forEach((locale) =>
           pushCandidate(findByLocale(locale))
         );
@@ -704,8 +789,7 @@ function PlayTab({ cards }: { cards: Card[] }) {
 
         if (voice) {
           utter.voice = voice;
-          utter.lang =
-            voice.lang || (hint === "pt" ? "pt-BR" : "en-US");
+          utter.lang = voice.lang || (hint === "pt" ? "pt-BR" : "en-US");
         } else {
           utter.lang = hint === "pt" ? "pt-BR" : "en-US";
         }
@@ -743,11 +827,9 @@ function PlayTab({ cards }: { cards: Card[] }) {
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key.toLowerCase() === "a" && revealed && current) {
-        setAnswers((prev) => ({ ...prev, [current.id]: true }));
-        next();
+        handleAnswer(true);
       } else if (e.key.toLowerCase() === "d" && revealed && current) {
-        setAnswers((prev) => ({ ...prev, [current.id]: false }));
-        next();
+        handleAnswer(false);
       } else if (e.key === " " || e.code === "Space") {
         e.preventDefault();
         setRevealed((r) => !r);
@@ -759,27 +841,36 @@ function PlayTab({ cards }: { cards: Card[] }) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [revealed, current]);
+  }, [revealed, current, handleAnswer]);
 
   // Estados vazios
   if (!cards.length) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
-        Cadastre alguns cards na aba <b>Cadastrar</b>.
+      <div className="grid gap-4">
+        {scoreSection}
+        <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
+          Cadastre alguns cards na aba <b>Cadastrar</b>.
+        </div>
       </div>
     );
   }
   if (!playable.length) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
-        Não há cards nas categorias selecionadas.
+      <div className="grid gap-4">
+        {scoreSection}
+        <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
+          Não há cards nas categorias selecionadas.
+        </div>
       </div>
     );
   }
   if (!order.length) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
-        Preparando os cards…
+      <div className="grid gap-4">
+        {scoreSection}
+        <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
+          Preparando os cards…
+        </div>
       </div>
     );
   }
@@ -805,6 +896,7 @@ function PlayTab({ cards }: { cards: Card[] }) {
 
     return (
       <div className="grid gap-4">
+        {scoreSection}
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <h3 className="text-lg font-semibold mb-2">Resumo da rodada</h3>
           <p className="text-sm text-slate-600">
@@ -880,12 +972,9 @@ function PlayTab({ cards }: { cards: Card[] }) {
   return (
     <div className="grid gap-4">
       <div className="flex justify-between items-center gap-3 flex-wrap">
-        <div className="text-sm text-slate-500">
-          {safeIndex + 1} / {order.length}
-        </div>
+        {scoreSection}
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm">Categorias</span>
+        <div className="items-center md:flex grid grid-cols-2 md:w-auto gap-2 w-full md:ml-auto flex-wrap">
           <button
             type="button"
             onClick={() => setIsCatDialogOpen(true)}
@@ -893,29 +982,17 @@ function PlayTab({ cards }: { cards: Card[] }) {
           >
             {categorySummary}
           </button>
-          {!isAllSelected ? (
-            <button
-              type="button"
-              onClick={selectAllCategories}
-              className="text-xs text-slate-500 underline"
-            >
-              Limpar seleção
-            </button>
-          ) : null}
-        </div>
-
-        <div className="flex items-center gap-2 ml-auto flex-wrap">
           <button
             type="button"
             onClick={() => setIsConfigDialogOpen(true)}
-            className="px-3 py-2 rounded-xl border text-sm bg-white hover:bg-slate-100 transition-colors flex items-center gap-2"
+            className="px-3 py-1.5  rounded-xl border text-sm bg-white hover:bg-slate-100 transition-colors flex items-center gap-2"
           >
             ⚙️ Configurar voz
           </button>
-          <button onClick={prev} className="px-3 py-2 rounded-xl border">
+          <button onClick={prev} className="px-3 py-1.5  rounded-xl border">
             Anterior
           </button>
-          <button onClick={next} className="px-3 py-2 rounded-xl border">
+          <button onClick={next} className="px-3 py-1.5  rounded-xl border">
             Próximo
           </button>
         </div>
@@ -960,10 +1037,7 @@ function PlayTab({ cards }: { cards: Card[] }) {
 
           <div className="flex items-center justify-center gap-3 mt-2">
             <button
-              onClick={() => {
-                setAnswers((prev) => ({ ...prev, [current.id]: true }));
-                next();
-              }}
+              onClick={() => handleAnswer(true)}
               disabled={!revealed}
               className={`px-4 py-2 rounded-xl text-white ${
                 revealed
@@ -975,10 +1049,7 @@ function PlayTab({ cards }: { cards: Card[] }) {
               Acertei
             </button>
             <button
-              onClick={() => {
-                setAnswers((prev) => ({ ...prev, [current.id]: false }));
-                next();
-              }}
+              onClick={() => handleAnswer(false)}
               disabled={!revealed}
               className={`px-4 py-2 rounded-xl text-white ${
                 revealed
@@ -1168,10 +1239,7 @@ function ConfigDialog({
   const valuePt = selectedVoicePt ?? "__auto";
 
   const getSortedVoices = (locale: "en" | "pt") => {
-    const priority =
-      locale === "pt"
-        ? ["pt", "en", "es"]
-        : ["en", "pt", "es"];
+    const priority = locale === "pt" ? ["pt", "en", "es"] : ["en", "pt", "es"];
     const score = (voice: SpeechSynthesisVoice) => {
       const norm = normalizeLang(voice.lang || "");
       const idx = priority.findIndex((prefix) =>
