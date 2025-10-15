@@ -381,9 +381,35 @@ function PlayTab({ cards }: { cards: Card[] }) {
   );
 
   // Categoria + vozes (com persistência)
-  const [selectedCat, setSelectedCat] = useState<string>(
-    () => localStorage.getItem("flashcards_selectedCat") || "__all"
-  );
+  const [selectedCats, setSelectedCats] = useState<string[]>(() => {
+    const raw =
+      localStorage.getItem("flashcards_selectedCats") ??
+      localStorage.getItem("flashcards_selectedCat");
+    if (!raw || raw === "__all") return [];
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return Array.from(
+          new Set(
+            parsed
+              .filter((cat): cat is string => typeof cat === "string")
+              .map((cat) => cat.trim())
+              .filter(Boolean)
+          )
+        );
+      }
+    } catch {
+      // Mantém compatibilidade com versões antigas que salvavam string simples
+    }
+    return Array.from(
+      new Set(
+        String(raw)
+          .split(",")
+          .map((cat) => cat.trim())
+          .filter(Boolean)
+      )
+    );
+  });
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [rate, setRate] = useState(() =>
     Number(localStorage.getItem("flashcards_rate") || 1)
@@ -391,16 +417,60 @@ function PlayTab({ cards }: { cards: Card[] }) {
   const [autoSpeak, setAutoSpeak] = useState(
     () => localStorage.getItem("flashcards_autoSpeak") !== "false"
   );
+  const [selectedVoiceEn, setSelectedVoiceEn] = useState<string | null>(() => {
+    const saved = localStorage.getItem("flashcards_voice_en") || "";
+    return saved ? saved : null;
+  });
+  const [selectedVoicePt, setSelectedVoicePt] = useState<string | null>(() => {
+    const saved = localStorage.getItem("flashcards_voice_pt") || "";
+    return saved ? saved : null;
+  });
+  const [isCatDialogOpen, setIsCatDialogOpen] = useState(false);
+  const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem("flashcards_selectedCat", selectedCat);
-  }, [selectedCat]);
+    const sanitized = Array.from(
+      new Set(
+        selectedCats.map((cat) => cat.trim()).filter(Boolean)
+      )
+    );
+    if (
+      sanitized.length !== selectedCats.length ||
+      sanitized.some((cat, idx) => cat !== selectedCats[idx])
+    ) {
+      setSelectedCats(sanitized);
+      return;
+    }
+    if (!sanitized.length) {
+      localStorage.removeItem("flashcards_selectedCats");
+      localStorage.setItem("flashcards_selectedCat", "__all");
+      return;
+    }
+    const payload = JSON.stringify(sanitized);
+    localStorage.setItem("flashcards_selectedCats", payload);
+    // Mantém chave antiga para forward/backward compatibility
+    localStorage.setItem("flashcards_selectedCat", sanitized[0] || "__all");
+  }, [selectedCats]);
   useEffect(() => {
     localStorage.setItem("flashcards_rate", String(rate));
   }, [rate]);
   useEffect(() => {
     localStorage.setItem("flashcards_autoSpeak", String(autoSpeak));
   }, [autoSpeak]);
+  useEffect(() => {
+    if (selectedVoiceEn) {
+      localStorage.setItem("flashcards_voice_en", selectedVoiceEn);
+    } else {
+      localStorage.removeItem("flashcards_voice_en");
+    }
+  }, [selectedVoiceEn]);
+  useEffect(() => {
+    if (selectedVoicePt) {
+      localStorage.setItem("flashcards_voice_pt", selectedVoicePt);
+    } else {
+      localStorage.removeItem("flashcards_voice_pt");
+    }
+  }, [selectedVoicePt]);
 
   // Lista de categorias existentes
   const categories = useMemo(
@@ -411,32 +481,71 @@ function PlayTab({ cards }: { cards: Card[] }) {
     [cards]
   );
   useEffect(() => {
-    if (selectedCat === "__all") return;
-    const normalized = selectedCat.trim();
-    if (!normalized) {
-      setSelectedCat("__all");
-      return;
+    setSelectedCats((prev) => {
+      if (!prev.length) return prev;
+      const available = new Set(categories);
+      const filtered = prev.filter((cat) => available.has(cat));
+      if (!filtered.length) {
+        return [];
+      }
+      if (
+        filtered.length === prev.length &&
+        filtered.every((cat, idx) => cat === prev[idx])
+      ) {
+        return prev;
+      }
+      return filtered;
+    });
+  }, [categories]);
+  useEffect(() => {
+    if (!voices.length) return;
+    if (selectedVoiceEn && !voices.some((v) => v.voiceURI === selectedVoiceEn)) {
+      setSelectedVoiceEn(null);
     }
-    const hasCategory = categories.some((cat) => cat === normalized);
-    if (!hasCategory) {
-      setSelectedCat("__all");
-      return;
+    if (selectedVoicePt && !voices.some((v) => v.voiceURI === selectedVoicePt)) {
+      setSelectedVoicePt(null);
     }
-    if (normalized !== selectedCat) {
-      setSelectedCat(normalized);
-    }
-  }, [categories, selectedCat]);
+  }, [voices, selectedVoiceEn, selectedVoicePt]);
 
   // Conjunto jogável conforme a categoria
   const playable = useMemo(() => {
-    if (selectedCat === "__all") {
+    const normalizedSelections = selectedCats
+      .map((cat) => cat.trim())
+      .filter(Boolean);
+    if (!normalizedSelections.length) {
       return cards.map((c, i) => ({ c, i }));
     }
-    const target = selectedCat.trim();
+    const allowed = new Set(normalizedSelections);
     return cards
       .map((c, i) => ({ c, i }))
-      .filter((x) => (x.c.category || "").trim() === target);
-  }, [cards, selectedCat]);
+      .filter((x) => allowed.has((x.c.category || "").trim()));
+  }, [cards, selectedCats]);
+  const isAllSelected = selectedCats.length === 0;
+  const categorySummary = useMemo(() => {
+    if (isAllSelected) return "Todas as categorias";
+    if (selectedCats.length === 1) return selectedCats[0];
+    return `${selectedCats.length} categorias selecionadas`;
+  }, [isAllSelected, selectedCats]);
+
+  const toggleCategory = useCallback((category: string) => {
+    const normalized = category.trim();
+    if (!normalized) return;
+    setSelectedCats((prev) => {
+      if (prev.includes(normalized)) {
+        return prev.filter((cat) => cat !== normalized);
+      }
+      return [...prev, normalized];
+    });
+  }, []);
+  const selectAllCategories = useCallback(() => {
+    setSelectedCats([]);
+  }, []);
+  const closeCategoryDialog = useCallback(() => {
+    setIsCatDialogOpen(false);
+  }, []);
+  const closeConfigDialog = useCallback(() => {
+    setIsConfigDialogOpen(false);
+  }, []);
 
   // --- Carrega vozes (robusto com fallback)
   useEffect(() => {
@@ -471,7 +580,7 @@ function PlayTab({ cards }: { cards: Card[] }) {
     setIndex(0);
     setRevealed(false);
     setAnswers({});
-  }, [playable.length, selectedCat]);
+  }, [playable.length, selectedCats]);
 
   // Corrige index se ordem mudar
   useEffect(() => {
@@ -536,6 +645,11 @@ function PlayTab({ cards }: { cards: Card[] }) {
       const run = (retries = 8) => {
         const available = synth.getVoices();
         const pool = available.length ? available : voices;
+        const preferredVoiceUri =
+          langHint === "pt" ? selectedVoicePt : selectedVoiceEn;
+        const preferredVoice = preferredVoiceUri
+          ? pool.find((v) => v.voiceURI === preferredVoiceUri)
+          : undefined;
 
         if (!pool.length) {
           if (retries <= 0) return;
@@ -570,6 +684,7 @@ function PlayTab({ cards }: { cards: Card[] }) {
             normalizeLang(v.lang).startsWith(localePrefix.toLowerCase())
           );
 
+        pushCandidate(preferredVoice);
         localePriority.forEach((locale) =>
           pushCandidate(findByLocale(locale))
         );
@@ -613,7 +728,7 @@ function PlayTab({ cards }: { cards: Card[] }) {
 
       run();
     },
-    [voices, rate]
+    [voices, rate, selectedVoiceEn, selectedVoicePt]
   );
 
   // Fala automático conforme o lado visível do card
@@ -657,7 +772,7 @@ function PlayTab({ cards }: { cards: Card[] }) {
   if (!playable.length) {
     return (
       <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
-        Não há cards na categoria selecionada.
+        Não há cards nas categorias selecionadas.
       </div>
     );
   }
@@ -769,44 +884,34 @@ function PlayTab({ cards }: { cards: Card[] }) {
           {safeIndex + 1} / {order.length}
         </div>
 
-        <div className="flex items-center gap-2">
-          <label className="text-sm">Categoria</label>
-          <select
-            value={selectedCat}
-            onChange={(e) => setSelectedCat(e.target.value)}
-            className="border rounded px-2 py-1 text-sm"
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm">Categorias</span>
+          <button
+            type="button"
+            onClick={() => setIsCatDialogOpen(true)}
+            className="px-3 py-1.5 rounded-xl border text-sm bg-white hover:bg-slate-100 transition-colors flex items-center gap-2"
           >
-            <option value="__all">Todas</option>
-            {categories.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+            {categorySummary}
+          </button>
+          {!isAllSelected ? (
+            <button
+              type="button"
+              onClick={selectAllCategories}
+              className="text-xs text-slate-500 underline"
+            >
+              Limpar seleção
+            </button>
+          ) : null}
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
-          <label className="text-sm">Velocidade</label>
-          <input
-            type="range"
-            min={0.7}
-            max={1.3}
-            step={0.05}
-            value={rate}
-            onChange={(e) => setRate(Number(e.target.value))}
-          />
-
-          <label className="text-sm flex items-center gap-1">
-            <input
-              type="checkbox"
-              checked={autoSpeak}
-              onChange={(e) => setAutoSpeak(e.target.checked)}
-            />{" "}
-            auto
-          </label>
-        </div>
-
-        <div className="flex gap-2 ml-auto">
+        <div className="flex items-center gap-2 ml-auto flex-wrap">
+          <button
+            type="button"
+            onClick={() => setIsConfigDialogOpen(true)}
+            className="px-3 py-2 rounded-xl border text-sm bg-white hover:bg-slate-100 transition-colors flex items-center gap-2"
+          >
+            ⚙️ Configurar voz
+          </button>
           <button onClick={prev} className="px-3 py-2 rounded-xl border">
             Anterior
           </button>
@@ -887,6 +992,328 @@ function PlayTab({ cards }: { cards: Card[] }) {
           </div>
         </>
       )}
+      {isCatDialogOpen ? (
+        <CategoryDialog
+          categories={categories}
+          selected={selectedCats}
+          isAllSelected={isAllSelected}
+          onToggle={toggleCategory}
+          onSelectAll={selectAllCategories}
+          onClose={closeCategoryDialog}
+        />
+      ) : null}
+      {isConfigDialogOpen ? (
+        <ConfigDialog
+          voices={voices}
+          selectedVoiceEn={selectedVoiceEn}
+          selectedVoicePt={selectedVoicePt}
+          rate={rate}
+          autoSpeak={autoSpeak}
+          onSelectVoiceEn={(value) => setSelectedVoiceEn(value)}
+          onSelectVoicePt={(value) => setSelectedVoicePt(value)}
+          onRateChange={(value) => setRate(value)}
+          onToggleAutoSpeak={(value) => setAutoSpeak(value)}
+          onClose={closeConfigDialog}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function CategoryDialog({
+  categories,
+  selected,
+  isAllSelected,
+  onToggle,
+  onSelectAll,
+  onClose,
+}: {
+  categories: string[];
+  selected: string[];
+  isAllSelected: boolean;
+  onToggle: (category: string) => void;
+  onSelectAll: () => void;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
+  function handleOverlayClick(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      role="dialog"
+      aria-modal="true"
+      onClick={handleOverlayClick}
+    >
+      <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Selecionar categorias</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full p-2 text-slate-500 hover:bg-slate-100"
+            aria-label="Fechar seleção de categorias"
+          >
+            ✕
+          </button>
+        </div>
+
+        <p className="mt-2 text-xs text-slate-500">
+          Deixe sem nenhuma marcada para incluir todas as categorias.
+        </p>
+
+        <div className="mt-4 max-h-60 overflow-y-auto pr-2">
+          {categories.length ? (
+            <ul className="grid gap-2">
+              {categories.map((cat) => {
+                const active = selected.includes(cat);
+                return (
+                  <li
+                    key={cat}
+                    className={`rounded-xl border px-3 py-2 transition-colors ${
+                      active ? "border-slate-900 bg-slate-900/5" : "bg-white"
+                    }`}
+                  >
+                    <label className="flex items-center gap-3 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={active}
+                        onChange={() => onToggle(cat)}
+                      />
+                      <span>{cat}</span>
+                    </label>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div className="text-sm text-slate-600">
+              Nenhuma categoria cadastrada até o momento.
+            </div>
+          )}
+        </div>
+
+        <div className="mt-6 flex justify-end gap-2">
+          {!isAllSelected ? (
+            <button
+              type="button"
+              onClick={onSelectAll}
+              className="text-sm text-slate-500 underline"
+            >
+              Limpar seleção
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm"
+          >
+            Concluir
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfigDialog({
+  voices,
+  selectedVoiceEn,
+  selectedVoicePt,
+  rate,
+  autoSpeak,
+  onSelectVoiceEn,
+  onSelectVoicePt,
+  onRateChange,
+  onToggleAutoSpeak,
+  onClose,
+}: {
+  voices: SpeechSynthesisVoice[];
+  selectedVoiceEn: string | null;
+  selectedVoicePt: string | null;
+  rate: number;
+  autoSpeak: boolean;
+  onSelectVoiceEn: (value: string | null) => void;
+  onSelectVoicePt: (value: string | null) => void;
+  onRateChange: (value: number) => void;
+  onToggleAutoSpeak: (value: boolean) => void;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
+  function handleOverlayClick(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+    if (e.target === e.currentTarget) onClose();
+  }
+
+  const valueEn = selectedVoiceEn ?? "__auto";
+  const valuePt = selectedVoicePt ?? "__auto";
+
+  const getSortedVoices = (locale: "en" | "pt") => {
+    const priority =
+      locale === "pt"
+        ? ["pt", "en", "es"]
+        : ["en", "pt", "es"];
+    const score = (voice: SpeechSynthesisVoice) => {
+      const norm = normalizeLang(voice.lang || "");
+      const idx = priority.findIndex((prefix) =>
+        norm.startsWith(prefix.toLowerCase())
+      );
+      return idx === -1 ? priority.length : idx;
+    };
+    return [...voices].sort((a, b) => {
+      const diff = score(a) - score(b);
+      if (diff !== 0) return diff;
+      const nameA = a.name || a.voiceURI;
+      const nameB = b.name || b.voiceURI;
+      return nameA.localeCompare(nameB);
+    });
+  };
+
+  const sortedPt = getSortedVoices("pt");
+  const sortedEn = getSortedVoices("en");
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      role="dialog"
+      aria-modal="true"
+      onClick={handleOverlayClick}
+    >
+      <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Configurações de voz</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full p-2 text-slate-500 hover:bg-slate-100"
+            aria-label="Fechar painel de configurações"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="mt-4 grid gap-5">
+          <section>
+            <h3 className="text-sm font-medium text-slate-600 mb-2">
+              Voz para inglês
+            </h3>
+            <select
+              className="w-full rounded-xl border px-3 py-2 text-sm"
+              value={valueEn}
+              onChange={(e) => {
+                const next = e.target.value;
+                if (next === "__auto") {
+                  onSelectVoiceEn(null);
+                } else {
+                  onSelectVoiceEn(next);
+                }
+              }}
+            >
+              <option value="__auto">Automático (escolher melhor voz)</option>
+              {sortedEn.map((voice) => (
+                <option key={voice.voiceURI} value={voice.voiceURI}>
+                  {voice.name || voice.voiceURI} ({voice.lang || "?"})
+                </option>
+              ))}
+            </select>
+            {!voices.length ? (
+              <p className="mt-1 text-xs text-slate-500">
+                Carregando vozes disponíveis do navegador…
+              </p>
+            ) : null}
+          </section>
+
+          <section>
+            <h3 className="text-sm font-medium text-slate-600 mb-2">
+              Voz para português
+            </h3>
+            <select
+              className="w-full rounded-xl border px-3 py-2 text-sm"
+              value={valuePt}
+              onChange={(e) => {
+                const next = e.target.value;
+                if (next === "__auto") {
+                  onSelectVoicePt(null);
+                } else {
+                  onSelectVoicePt(next);
+                }
+              }}
+            >
+              <option value="__auto">Automático (escolher melhor voz)</option>
+              {sortedPt.map((voice) => (
+                <option key={voice.voiceURI} value={voice.voiceURI}>
+                  {voice.name || voice.voiceURI} ({voice.lang || "?"})
+                </option>
+              ))}
+            </select>
+            {!voices.length ? (
+              <p className="mt-1 text-xs text-slate-500">
+                Carregando vozes disponíveis do navegador…
+              </p>
+            ) : null}
+          </section>
+
+          <section>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-medium text-slate-600">Velocidade</h3>
+              <span className="text-xs text-slate-500">
+                {rate.toFixed(2).replace(/\.00$/, "")}x
+              </span>
+            </div>
+            <input
+              type="range"
+              min={0.7}
+              max={1.3}
+              step={0.05}
+              value={rate}
+              onChange={(e) => onRateChange(Number(e.target.value))}
+              className="w-full"
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              Ajuste a velocidade de reprodução da voz.
+            </p>
+          </section>
+
+          <section>
+            <label className="flex items-center gap-3 text-sm">
+              <input
+                type="checkbox"
+                checked={autoSpeak}
+                onChange={(e) => onToggleAutoSpeak(e.target.checked)}
+              />
+              Reproduzir automaticamente ao virar o card
+            </label>
+          </section>
+        </div>
+
+        <div className="mt-6 flex justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm"
+          >
+            Concluir
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
