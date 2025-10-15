@@ -385,29 +385,16 @@ function PlayTab({ cards }: { cards: Card[] }) {
     () => localStorage.getItem("flashcards_selectedCat") || "__all"
   );
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [selectedVoiceURIEn, setSelectedVoiceURIEn] = useState(
-    () => localStorage.getItem("flashcards_voice_en") || ""
-  );
-  const [selectedVoiceURIPt, setSelectedVoiceURIPt] = useState(
-    () => localStorage.getItem("flashcards_voice_pt") || ""
-  );
   const [rate, setRate] = useState(() =>
     Number(localStorage.getItem("flashcards_rate") || 1)
   );
   const [autoSpeak, setAutoSpeak] = useState(
     () => localStorage.getItem("flashcards_autoSpeak") !== "false"
   );
-  const voiceDefaultsApplied = useRef(false);
 
   useEffect(() => {
     localStorage.setItem("flashcards_selectedCat", selectedCat);
   }, [selectedCat]);
-  useEffect(() => {
-    localStorage.setItem("flashcards_voice_en", selectedVoiceURIEn);
-  }, [selectedVoiceURIEn]);
-  useEffect(() => {
-    localStorage.setItem("flashcards_voice_pt", selectedVoiceURIPt);
-  }, [selectedVoiceURIPt]);
   useEffect(() => {
     localStorage.setItem("flashcards_rate", String(rate));
   }, [rate]);
@@ -423,22 +410,32 @@ function PlayTab({ cards }: { cards: Card[] }) {
       ).sort(),
     [cards]
   );
-  const portugueseVoices = useMemo(
-    () => voices.filter((v) => normalizeLang(v.lang).startsWith("pt")),
-    [voices]
-  );
-  const englishVoices = useMemo(
-    () => voices.filter((v) => normalizeLang(v.lang).startsWith("en")),
-    [voices]
-  );
+  useEffect(() => {
+    if (selectedCat === "__all") return;
+    const normalized = selectedCat.trim();
+    if (!normalized) {
+      setSelectedCat("__all");
+      return;
+    }
+    const hasCategory = categories.some((cat) => cat === normalized);
+    if (!hasCategory) {
+      setSelectedCat("__all");
+      return;
+    }
+    if (normalized !== selectedCat) {
+      setSelectedCat(normalized);
+    }
+  }, [categories, selectedCat]);
 
   // Conjunto jogável conforme a categoria
   const playable = useMemo(() => {
+    if (selectedCat === "__all") {
+      return cards.map((c, i) => ({ c, i }));
+    }
+    const target = selectedCat.trim();
     return cards
       .map((c, i) => ({ c, i }))
-      .filter((x) =>
-        selectedCat === "__all" ? true : (x.c.category || "") === selectedCat
-      );
+      .filter((x) => (x.c.category || "").trim() === target);
   }, [cards, selectedCat]);
 
   // --- Carrega vozes (robusto com fallback)
@@ -446,21 +443,6 @@ function PlayTab({ cards }: { cards: Card[] }) {
     function refreshVoices() {
       const list = window.speechSynthesis.getVoices();
       setVoices(list);
-      if (!voiceDefaultsApplied.current && list.length) {
-        if (!selectedVoiceURIEn) {
-          const enPick =
-            list.find((v) => normalizeLang(v.lang).startsWith("en-us")) ??
-            list.find((v) => normalizeLang(v.lang).startsWith("en"));
-          if (enPick) setSelectedVoiceURIEn(enPick.voiceURI);
-        }
-        if (!selectedVoiceURIPt) {
-          const ptPick =
-            list.find((v) => normalizeLang(v.lang).startsWith("pt-br")) ??
-            list.find((v) => normalizeLang(v.lang).startsWith("pt"));
-          if (ptPick) setSelectedVoiceURIPt(ptPick.voiceURI);
-        }
-        voiceDefaultsApplied.current = true;
-      }
     }
     refreshVoices();
 
@@ -475,7 +457,7 @@ function PlayTab({ cards }: { cards: Card[] }) {
         (window.speechSynthesis as any).onvoiceschanged = null;
       };
     }
-  }, [selectedVoiceURIEn, selectedVoiceURIPt]);
+  }, []);
 
   // Embaralha ao mudar os jogáveis ou a categoria
   useEffect(() => {
@@ -540,6 +522,10 @@ function PlayTab({ cards }: { cards: Card[] }) {
     [order, answers, cards]
   );
   const isDone = order.length > 0 && progress >= order.length;
+  const totalCards = order.length;
+  const remainingCards = Math.max(totalCards - progress, 0);
+  const progressPercent =
+    totalCards > 0 ? Math.min(100, Math.max(0, (progress / totalCards) * 100)) : 0;
 
   // --- Fala estável (com retries e pequeno delay após cancel)
   const speakText = useCallback(
@@ -560,10 +546,6 @@ function PlayTab({ cards }: { cards: Card[] }) {
         const utter = new SpeechSynthesisUtterance(text);
 
         const hint = langHint === "pt" ? "pt" : "en";
-        const targetVoiceURI =
-          hint === "pt" ? selectedVoiceURIPt : selectedVoiceURIEn;
-        const preferred = pool.find((v) => v.voiceURI === targetVoiceURI);
-
         const localePriority =
           hint === "pt"
             ? ["pt-br", "pt_br", "pt-pt", "pt"]
@@ -588,23 +570,22 @@ function PlayTab({ cards }: { cards: Card[] }) {
             normalizeLang(v.lang).startsWith(localePrefix.toLowerCase())
           );
 
-        pushCandidate(
-          preferred &&
-            normalizeLang(preferred.lang).startsWith(
-              localePriority[0] || hint
-            )
-            ? preferred
-            : undefined
-        );
         localePriority.forEach((locale) =>
           pushCandidate(findByLocale(locale))
         );
-        pushCandidate(preferred);
         secondaryLocale.forEach((locale) =>
           pushCandidate(findByLocale(locale))
         );
+        if (!candidates.length) {
+          pushCandidate(
+            pool.find((v) => normalizeLang(v.lang).startsWith(hint))
+          );
+        }
+        if (!candidates.length && pool.length) {
+          pushCandidate(pool[0]);
+        }
 
-        const voice = candidates[0] || pool[0];
+        const voice = candidates[0];
 
         if (voice) {
           utter.voice = voice;
@@ -632,7 +613,7 @@ function PlayTab({ cards }: { cards: Card[] }) {
 
       run();
     },
-    [voices, selectedVoiceURIEn, selectedVoiceURIPt, rate]
+    [voices, rate]
   );
 
   // Fala automático conforme o lado visível do card
@@ -715,6 +696,19 @@ function PlayTab({ cards }: { cards: Card[] }) {
             Acertos: {right.length} • Erros: {wrong.length} • Total:{" "}
             {order.length}
           </p>
+          <div className="mt-4 flex gap-2 flex-wrap">
+            {wrongCards.length ? (
+              <button
+                onClick={retryWrong}
+                className="px-4 py-2 rounded-xl bg-slate-900 text-white"
+              >
+                Rever apenas errados
+              </button>
+            ) : null}
+            <button onClick={resetAll} className="px-4 py-2 rounded-xl border">
+              Recomeçar tudo
+            </button>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">
@@ -764,20 +758,6 @@ function PlayTab({ cards }: { cards: Card[] }) {
             )}
           </div>
         </div>
-
-        <div className="flex gap-2">
-          {wrongCards.length ? (
-            <button
-              onClick={retryWrong}
-              className="px-4 py-2 rounded-xl bg-slate-900 text-white"
-            >
-              Rever apenas errados
-            </button>
-          ) : null}
-          <button onClick={resetAll} className="px-4 py-2 rounded-xl border">
-            Recomeçar tudo
-          </button>
-        </div>
       </div>
     );
   }
@@ -805,48 +785,8 @@ function PlayTab({ cards }: { cards: Card[] }) {
           </select>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <label className="text-sm">Voz PT</label>
-          <select
-            value={selectedVoiceURIPt}
-            onChange={(e) => setSelectedVoiceURIPt(e.target.value)}
-            className="border rounded px-2 py-1 text-sm"
-          >
-            <option value="">Automática</option>
-            {portugueseVoices.length ? (
-              portugueseVoices.map((v) => (
-                <option key={v.voiceURI} value={v.voiceURI}>
-                  {v.name} • {v.lang}
-                </option>
-              ))
-            ) : (
-              <option value="__none" disabled>
-                Sem voz PT disponível
-              </option>
-            )}
-          </select>
-
-          <label className="text-sm ml-2">Voz EN</label>
-          <select
-            value={selectedVoiceURIEn}
-            onChange={(e) => setSelectedVoiceURIEn(e.target.value)}
-            className="border rounded px-2 py-1 text-sm"
-          >
-            <option value="">Automática</option>
-            {englishVoices.length ? (
-              englishVoices.map((v) => (
-                <option key={v.voiceURI} value={v.voiceURI}>
-                  {v.name} • {v.lang}
-                </option>
-              ))
-            ) : (
-              <option value="__none" disabled>
-                Sem voz EN disponível
-              </option>
-            )}
-          </select>
-
-          <label className="text-sm ml-2">Velocidade</label>
+        <div className="flex items-center gap-3 flex-wrap">
+          <label className="text-sm">Velocidade</label>
           <input
             type="range"
             min={0.7}
@@ -856,7 +796,7 @@ function PlayTab({ cards }: { cards: Card[] }) {
             onChange={(e) => setRate(Number(e.target.value))}
           />
 
-          <label className="text-sm ml-2 flex items-center gap-1">
+          <label className="text-sm flex items-center gap-1">
             <input
               type="checkbox"
               checked={autoSpeak}
@@ -875,6 +815,23 @@ function PlayTab({ cards }: { cards: Card[] }) {
           </button>
         </div>
       </div>
+
+      {totalCards > 0 ? (
+        <div className="w-full max-w-xl mx-auto">
+          <div className="flex justify-between text-xs text-slate-500 mb-1">
+            <span>
+              Feitos: {progress} / {totalCards}
+            </span>
+            <span>Faltam: {remainingCards}</span>
+          </div>
+          <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
+            <div
+              className="h-full bg-slate-900 transition-all duration-200 ease-out"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
 
       {/* Card + barra de acerto/erro */}
       {!current ? (
