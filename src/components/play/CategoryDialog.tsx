@@ -18,12 +18,12 @@ const CategoryDialog: React.FC<CategoryDialogProps> = ({
   onClose,
 }) => {
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-      <div className="relative w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+      <div className="relative w-full max-w-2xl rounded-2xl bg-white border border-slate-200 p-6 shadow-2xl shadow-slate-300/40">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold">Categorias</h2>
-            <p className="text-sm text-slate-500">
+            <h2 className="text-lg font-semibold text-slate-900">Categorias</h2>
+            <p className="text-sm text-slate-600">
               Selecione as categorias que deseja revisar agora.
             </p>
           </div>
@@ -46,10 +46,12 @@ const CategoryDialog: React.FC<CategoryDialogProps> = ({
                   <li
                     key={cat}
                     className={`rounded-xl border px-3 py-2 transition-colors ${
-                      active ? "border-slate-900 bg-slate-900/5" : "bg-white"
+                      active
+                        ? "border-emerald-300 bg-emerald-50"
+                        : "border-slate-200 bg-slate-50"
                     }`}
                   >
-                    <label className="flex items-center gap-3 text-sm">
+                    <label className="flex items-center gap-3 text-sm text-slate-900">
                       <input
                         type="checkbox"
                         checked={active}
@@ -60,7 +62,7 @@ const CategoryDialog: React.FC<CategoryDialogProps> = ({
                   </li>
                 );
               })}
-            </ul>
+              </ul>
           ) : (
             <div className="text-sm text-slate-600">
               Nenhuma categoria cadastrada até o momento.
@@ -73,7 +75,7 @@ const CategoryDialog: React.FC<CategoryDialogProps> = ({
             <button
               type="button"
               onClick={onSelectAll}
-              className="text-sm text-slate-500 underline"
+              className="text-sm text-slate-600 underline"
             >
               Limpar seleção
             </button>
@@ -81,7 +83,7 @@ const CategoryDialog: React.FC<CategoryDialogProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-400 text-white text-sm font-semibold shadow-md"
           >
             Concluir
           </button>
@@ -92,4 +94,3 @@ const CategoryDialog: React.FC<CategoryDialogProps> = ({
 };
 
 export default CategoryDialog;
-

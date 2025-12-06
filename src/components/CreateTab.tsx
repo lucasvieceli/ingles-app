@@ -137,28 +137,28 @@ const CreateTab: React.FC<CreateTabProps> = ({ cards, setCardsLocal }) => {
 
   return (
     <div className="grid gap-6">
-      <div className="grid gap-3 bg-white p-4 rounded-2xl shadow-sm">
-        <label className="text-sm font-medium">Palavra em inglês</label>
+      <div className="grid gap-3 bg-white border border-slate-200 p-5 sm:p-6 rounded-2xl shadow-sm">
+        <label className="text-xs uppercase tracking-[0.18em] text-slate-600">Palavra em inglês</label>
         <input
           value={en}
           onChange={(event) => setEn(event.target.value)}
           placeholder="e.g., apple"
-          className="border rounded-xl px-3 py-2"
+          className="rounded-xl px-3 py-2 bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-orange-400/70 focus:border-orange-400/60 transition"
         />
-        <label className="text-sm font-medium">Tradução em português</label>
+        <label className="text-xs uppercase tracking-[0.18em] text-slate-600">Tradução em português</label>
         <input
           value={pt}
           onChange={(event) => setPt(event.target.value)}
           placeholder="e.g., maçã"
-          className="border rounded-xl px-3 py-2"
+          className="rounded-xl px-3 py-2 bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-orange-400/70 focus:border-orange-400/60 transition"
         />
-        <label className="text-sm font-medium">Categoria (opcional)</label>
+        <label className="text-xs uppercase tracking-[0.18em] text-slate-600">Categoria (opcional)</label>
         <input
           list="cats"
           value={cat}
           onChange={(event) => setCat(event.target.value)}
           placeholder="e.g., Frutas, Verbos, Casa"
-          className="border rounded-xl px-3 py-2"
+          className="rounded-xl px-3 py-2 bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-orange-400/70 focus:border-orange-400/60 transition"
         />
         <datalist id="cats">
           {categories.map((category) => (
@@ -168,13 +168,13 @@ const CreateTab: React.FC<CreateTabProps> = ({ cards, setCardsLocal }) => {
         <div className="flex gap-2 pt-2 flex-col sm:flex-row">
           <button
             onClick={addCard}
-            className="px-4 py-2 rounded-xl bg-slate-900 text-white font-medium"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-400 text-white font-semibold shadow-md hover:translate-y-[-1px] active:translate-y-[1px] transition-transform"
           >
             Adicionar
           </button>
           <button
             onClick={exportJson}
-            className="px-4 py-2 rounded-xl bg-white border font-medium"
+            className="px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-medium hover:bg-slate-100 transition"
           >
             Exportar JSON
           </button>
@@ -182,18 +182,18 @@ const CreateTab: React.FC<CreateTabProps> = ({ cards, setCardsLocal }) => {
         </div>
       </div>
 
-      <div className="flex md:items-center justify-between gap-2 flex-wrap flex-col sm:flex-row">
-        <div className="flex md:items-center gap-2 flex-col sm:flex-row">
+      <div className="flex md:items-center justify-between gap-3 flex-wrap flex-col sm:flex-row bg-slate-50 border border-slate-200 rounded-2xl p-3">
+        <div className="flex md:items-center gap-2 flex-col sm:flex-row w-full sm:w-auto">
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar…"
-            className="border rounded-xl px-3 py-2 sm:max-w-60 w-full"
+            placeholder="Buscar por inglês, português ou categoria"
+            className="rounded-xl px-3 py-2 sm:max-w-72 w-full bg-white border border-slate-200 text-slate-900 placeholder:text-slate-500 focus:ring-2 focus:ring-orange-400/70 focus:border-orange-400/60 transition"
           />
           <select
             value={searchCat}
             onChange={(event) => setSearchCat(event.target.value)}
-            className="border rounded px-2 py-1 text-sm"
+            className="rounded-xl px-3 py-2 text-sm bg-white border border-slate-200 text-slate-900 focus:ring-2 focus:ring-emerald-400/70"
           >
             <option value="__all">Todas</option>
             {categories.map((category) => (
@@ -203,7 +203,9 @@ const CreateTab: React.FC<CreateTabProps> = ({ cards, setCardsLocal }) => {
             ))}
           </select>
         </div>
-        <h2 className="text-lg font-semibold">Seus cards ({cards.length})</h2>
+        <h2 className="text-lg font-semibold text-slate-900">
+          Seus cards ({cards.length})
+        </h2>
       </div>
 
       {grouped.length ? (
@@ -213,20 +215,23 @@ const CreateTab: React.FC<CreateTabProps> = ({ cards, setCardsLocal }) => {
             return (
               <div
                 key={key}
-                className="bg-white rounded-2xl shadow-sm p-4 flex flex-col gap-3"
+                className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 flex flex-col gap-3"
               >
                 <button
                   type="button"
                   onClick={() =>
                     setExpandedCat((prev) => (prev === key ? null : key))
                   }
-                  className="text-left"
+                  className="text-left group"
                 >
-                  <div className="text-xs uppercase tracking-wide text-slate-500">
+                  <div className="text-[11px] uppercase tracking-wide text-slate-500">
                     Categoria
                   </div>
-                  <div className="mt-1 text-xl font-semibold">{label}</div>
-                  <div className="text-xs text-slate-400 mt-2">
+                  <div className="mt-1 text-xl font-semibold text-slate-900 flex items-center gap-2">
+                    {label}
+                    <span className="h-2 w-2 rounded-full bg-emerald-400/70 animate-pulse" />
+                  </div>
+                  <div className="text-xs text-slate-500 mt-2">
                     {groupedCards.length}{" "}
                     {groupedCards.length === 1 ? "card" : "cards"}
                   </div>
@@ -237,16 +242,16 @@ const CreateTab: React.FC<CreateTabProps> = ({ cards, setCardsLocal }) => {
                     {groupedCards.map((card) => (
                       <li
                         key={card.id}
-                        className="border rounded-2xl p-3 flex flex-col gap-2"
+                        className="border border-slate-200 rounded-2xl p-3 flex flex-col gap-2 bg-slate-50"
                       >
-                        <div className="text-xs text-slate-500">EN</div>
-                        <div className="text-lg font-semibold">{card.en}</div>
-                        <div className="text-xs text-slate-500">PT</div>
-                        <div className="text-base">{card.pt}</div>
+                        <div className="text-[11px] uppercase tracking-wide text-slate-500">EN</div>
+                        <div className="text-lg font-semibold text-slate-900">{card.en}</div>
+                        <div className="text-[11px] uppercase tracking-wide text-slate-500">PT</div>
+                        <div className="text-base text-slate-800">{card.pt}</div>
                         <div className="pt-2 flex justify-end">
                           <button
                             onClick={() => removeCard(card.id)}
-                            className="text-xs px-3 py-1 rounded-lg border"
+                            className="text-xs px-3 py-1 rounded-lg border border-slate-200 text-slate-700 hover:bg-white transition"
                           >
                             Excluir
                           </button>
@@ -290,7 +295,7 @@ const ImportButton: React.FC<{ onImport: (jsonText: string) => void }> = ({
       />
       <button
         onClick={() => inputRef.current?.click()}
-        className="px-4 py-2 rounded-xl bg-white border font-medium"
+        className="px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-medium hover:bg-slate-100 transition"
       >
         Importar JSON
       </button>
@@ -299,4 +304,3 @@ const ImportButton: React.FC<{ onImport: (jsonText: string) => void }> = ({
 };
 
 export default CreateTab;
-

@@ -17,22 +17,22 @@ const ScorePanel: React.FC<ScorePanelProps> = ({
 }) => {
   const scoreNumberClass = `text-lg font-semibold transform transition duration-300 ${
     scoreChange === "up"
-      ? "text-green-600 scale-110"
+      ? "text-emerald-600 scale-110"
       : scoreChange === "down"
-      ? "text-red-600 scale-90"
+      ? "text-rose-500 scale-90"
       : "text-slate-900 scale-100"
   }`;
 
   const scoreDeltaClass = `text-xs font-semibold transition-opacity duration-300 ${
     scoreDeltaDisplay === null
-      ? "opacity-0 text-slate-400"
+      ? "opacity-0 text-slate-500"
       : scoreDeltaDisplay > 0
-      ? "text-green-600 opacity-100"
-      : "text-red-600 opacity-100"
+      ? "text-emerald-600 opacity-100"
+      : "text-rose-500 opacity-100"
   }`;
 
   return (
-    <div className="flex items-center justify-center sm:justify-start gap-3 px-3 py-1.5 bg-white rounded-xl border shadow-sm mx-auto sm:mx-0">
+    <div className="flex items-center justify-center sm:justify-start gap-3 px-3 py-1.5 bg-white rounded-xl border border-slate-200 shadow-sm mx-auto sm:mx-0 text-slate-900">
       <div className="text-xs uppercase tracking-wide text-slate-500 text-center sm:text-left">
         Pontuação
       </div>
@@ -45,4 +45,3 @@ const ScorePanel: React.FC<ScorePanelProps> = ({
 };
 
 export default ScorePanel;
-

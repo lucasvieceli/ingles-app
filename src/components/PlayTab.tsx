@@ -123,7 +123,7 @@ const PlayTab: React.FC<PlayTabProps> = ({ cards }) => {
     return (
       <div className="grid gap-4">
         {scorePanel}
-        <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 text-center text-slate-700">
           Cadastre alguns cards na aba <b>Cadastrar</b>.
         </div>
       </div>
@@ -134,7 +134,7 @@ const PlayTab: React.FC<PlayTabProps> = ({ cards }) => {
     return (
       <div className="grid gap-4">
         {scorePanel}
-        <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 text-center text-slate-700">
           Não há cards nas categorias selecionadas.
         </div>
       </div>
@@ -145,7 +145,7 @@ const PlayTab: React.FC<PlayTabProps> = ({ cards }) => {
     return (
       <div className="grid gap-4">
         {scorePanel}
-        <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 text-center text-slate-700">
           Preparando os cards…
         </div>
       </div>
@@ -181,8 +181,8 @@ const PlayTab: React.FC<PlayTabProps> = ({ cards }) => {
     return (
       <div className="grid gap-4">
         {scorePanel}
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <h3 className="text-lg font-semibold mb-2">Resumo da rodada</h3>
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+          <h3 className="text-lg font-semibold mb-2 text-slate-900">Resumo da rodada</h3>
           <p className="text-sm text-slate-600">
             Acertos: {rightIndices.length} • Erros: {wrongIndices.length} •
             Total: {order.length}
@@ -191,28 +191,34 @@ const PlayTab: React.FC<PlayTabProps> = ({ cards }) => {
             {wrongCards.length ? (
               <button
                 onClick={retryWrong}
-                className="px-4 py-2 rounded-xl bg-slate-900 text-white"
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-400 text-white font-semibold shadow-md"
               >
                 Rever apenas errados
               </button>
             ) : null}
-            <button onClick={resetAll} className="px-4 py-2 rounded-xl border">
+            <button
+              onClick={resetAll}
+              className="px-4 py-2 rounded-xl border border-slate-200 text-slate-800 hover:bg-slate-50 transition"
+            >
               Recomeçar tudo
             </button>
           </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">
-          <div className="bg-white rounded-2xl shadow-sm p-6">
-            <h4 className="font-medium mb-3">
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+            <h4 className="font-medium mb-3 text-slate-900">
               Errados ({wrongCards.length})
             </h4>
             {wrongCards.length ? (
               <ul className="grid gap-2">
                 {wrongCards.map((card) => (
-                  <li key={card.id} className="border rounded-xl p-3">
+                  <li
+                    key={card.id}
+                    className="border border-slate-200 rounded-xl p-3 bg-slate-50 text-slate-800"
+                  >
                     <div className="text-xs text-slate-500">EN</div>
-                    <div className="font-semibold">{card.en}</div>
+                    <div className="font-semibold text-slate-900">{card.en}</div>
                     <div className="text-xs text-slate-500 mt-1">PT</div>
                     <div>{card.pt}</div>
                     {card.category ? (
@@ -228,16 +234,19 @@ const PlayTab: React.FC<PlayTabProps> = ({ cards }) => {
             )}
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm p-6">
-            <h4 className="font-medium mb-3">
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+            <h4 className="font-medium mb-3 text-slate-900">
               Acertos ({rightCards.length})
             </h4>
             {rightCards.length ? (
               <ul className="grid gap-2">
                 {rightCards.map((card) => (
-                  <li key={card.id} className="border rounded-xl p-3">
+                  <li
+                    key={card.id}
+                    className="border border-slate-200 rounded-xl p-3 bg-slate-50 text-slate-800"
+                  >
                     <div className="text-xs text-slate-500">EN</div>
-                    <div className="font-semibold">{card.en}</div>
+                    <div className="font-semibold text-slate-900">{card.en}</div>
                     <div className="text-xs text-slate-500 mt-1">PT</div>
                     <div>{card.pt}</div>
                     {card.category ? (
@@ -266,21 +275,27 @@ const PlayTab: React.FC<PlayTabProps> = ({ cards }) => {
           <button
             type="button"
             onClick={() => setIsCatDialogOpen(true)}
-            className="px-3 py-1.5 rounded-xl border text-sm bg-white hover:bg-slate-100 transition-colors flex items-center gap-2"
+            className="px-3 py-1.5 rounded-xl border border-slate-200 text-sm bg-white text-slate-800 hover:bg-slate-50 transition-colors flex items-center gap-2"
           >
             {categorySummary}
           </button>
           <button
             type="button"
             onClick={() => setIsConfigDialogOpen(true)}
-            className="px-3 py-1.5 rounded-xl border text-sm bg-white hover:bg-slate-100 transition-colors flex items-center gap-2"
+            className="px-3 py-1.5 rounded-xl border border-slate-200 text-sm bg-white text-slate-800 hover:bg-slate-50 transition-colors flex items-center gap-2"
           >
             ⚙️ Configurar voz
           </button>
-          <button onClick={prev} className="px-3 py-1.5 rounded-xl border">
+          <button
+            onClick={prev}
+            className="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-800 hover:bg-slate-50 transition"
+          >
             Anterior
           </button>
-          <button onClick={next} className="px-3 py-1.5 rounded-xl border">
+          <button
+            onClick={next}
+            className="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-800 hover:bg-slate-50 transition"
+          >
             Próximo
           </button>
         </div>
@@ -288,15 +303,15 @@ const PlayTab: React.FC<PlayTabProps> = ({ cards }) => {
 
       {totalCards > 0 ? (
         <div className="w-full max-w-xl mx-auto">
-          <div className="flex justify-between text-xs text-slate-500 mb-1">
+          <div className="flex justify-between text-xs text-slate-600 mb-1">
             <span>
               Feitos: {progress} / {totalCards}
             </span>
             <span>Faltam: {remainingCards}</span>
           </div>
-          <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
+          <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
             <div
-              className="h-full bg-slate-900 transition-all duration-200 ease-out"
+              className="h-full bg-gradient-to-r from-orange-500 via-amber-400 to-emerald-400 transition-all duration-200 ease-out"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -304,11 +319,14 @@ const PlayTab: React.FC<PlayTabProps> = ({ cards }) => {
       ) : null}
 
       {!current ? (
-        <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 text-center text-slate-700">
           <p className="mb-3">
             Não consegui localizar este card. Quer reembaralhar?
           </p>
-          <button onClick={reshuffle} className="px-3 py-2 rounded-xl border">
+          <button
+            onClick={reshuffle}
+            className="px-3 py-2 rounded-xl border border-slate-200 text-slate-800 hover:bg-slate-50 transition"
+          >
             Reembaralhar
           </button>
         </div>
@@ -326,10 +344,10 @@ const PlayTab: React.FC<PlayTabProps> = ({ cards }) => {
             <button
               onClick={() => handleAnswer(true)}
               disabled={!revealed}
-              className={`px-4 py-2 rounded-xl text-white ${
+              className={`px-4 py-2 rounded-xl font-semibold shadow-lg transition ${
                 revealed
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-slate-300 cursor-not-allowed"
+                  ? "bg-gradient-to-r from-emerald-500 to-teal-400 text-white hover:scale-[1.01]"
+                  : "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
               }`}
               title="Marcar como acertei (A)"
             >
@@ -338,10 +356,10 @@ const PlayTab: React.FC<PlayTabProps> = ({ cards }) => {
             <button
               onClick={() => handleAnswer(false)}
               disabled={!revealed}
-              className={`px-4 py-2 rounded-xl text-white ${
+              className={`px-4 py-2 rounded-xl font-semibold shadow-lg transition ${
                 revealed
-                  ? "bg-red-600 hover:bg-red-700"
-                  : "bg-slate-300 cursor-not-allowed"
+                  ? "bg-gradient-to-r from-rose-500 to-orange-400 text-white hover:scale-[1.01]"
+                  : "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
               }`}
               title="Marcar como errei (D)"
             >
@@ -381,4 +399,3 @@ const PlayTab: React.FC<PlayTabProps> = ({ cards }) => {
 };
 
 export default PlayTab;
-

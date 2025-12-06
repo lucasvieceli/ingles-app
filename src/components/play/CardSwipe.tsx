@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 
 type CardSwipeProps = {
   en: string;
@@ -15,6 +15,11 @@ const CardSwipe: React.FC<CardSwipeProps> = ({
   setRevealed,
   speak,
 }) => {
+  const [dragStartX, setDragStartX] = useState<number | null>(null);
+  const [dragDeltaX, setDragDeltaX] = useState(0);
+  const skipClickRef = useRef(false);
+  const [isDragging, setIsDragging] = useState(false);
+
   const speakPortuguese = useCallback(
     (event?: React.MouseEvent) => {
       event?.stopPropagation();
@@ -32,50 +37,120 @@ const CardSwipe: React.FC<CardSwipeProps> = ({
   );
 
   function onClickToggle() {
+    if (skipClickRef.current) {
+      skipClickRef.current = false;
+      return;
+    }
     setRevealed(!revealed);
   }
 
+  function onPointerDown(event: React.PointerEvent) {
+    setDragStartX(event.clientX);
+    setDragDeltaX(0);
+    setIsDragging(true);
+    (event.target as HTMLElement).setPointerCapture?.(event.pointerId);
+  }
+
+  function onPointerMove(event: React.PointerEvent) {
+    if (dragStartX === null) return;
+    setDragDeltaX(event.clientX - dragStartX);
+    if (Math.abs(event.clientX - dragStartX) > 8) {
+      skipClickRef.current = true;
+    }
+  }
+
+  function onPointerEnd(event?: React.PointerEvent) {
+    if (dragStartX === null) return;
+    const totalDelta = dragDeltaX;
+    setDragStartX(null);
+    setDragDeltaX(0);
+    setIsDragging(false);
+    (event?.target as HTMLElement | undefined)?.releasePointerCapture?.(
+      event.pointerId
+    );
+    if (Math.abs(totalDelta) > 60) {
+      skipClickRef.current = true;
+      // Arrasto para a direita revela, para a esquerda oculta.
+      if (!revealed && totalDelta > 60) {
+        setRevealed(true);
+      } else if (revealed && totalDelta < -60) {
+        setRevealed(false);
+      }
+    }
+  }
+
+  const dragTilt = useMemo(() => {
+    const clamped = Math.max(-10, Math.min(10, dragDeltaX / 6));
+    return dragStartX === null ? 0 : clamped;
+  }, [dragDeltaX, dragStartX]);
+
+  const rotationDeg = useMemo(() => {
+    const base = revealed ? 180 : 0;
+    if (!isDragging) return base;
+    const preview = base + dragDeltaX / 2; // suaviza a rotação
+    return Math.max(-20, Math.min(380, preview));
+  }, [dragDeltaX, isDragging, revealed]);
+
   return (
     <div
-      className="relative h-[300px] w-full max-w-xl mx-auto cursor-pointer overflow-hidden border border-slate-200"
+      className="relative h-[340px] w-full max-w-xl mx-auto cursor-pointer"
       onClick={onClickToggle}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerEnd}
+      onPointerCancel={onPointerEnd}
+      role="button"
+      aria-label={revealed ? "Ocultar tradução" : "Revelar tradução"}
+      style={{ perspective: "1400px" }}
     >
-      <div className="absolute inset-0 bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center justify-center z-0">
-        <span className="text-xs uppercase tracking-wide text-slate-400">
-          Português
-        </span>
-        <div className="mt-2 text-2xl sm:text-3xl font-bold text-center break-words flex items-center gap-3">
-          {pt}
-          <button
-            onClick={speakPortuguese}
-            className="ml-2 p-2 rounded-full bg-slate-200 hover:bg-slate-300"
-            title="Repetir pronúncia"
-          >
-            🔊
-          </button>
-        </div>
-      </div>
-
       <div
-        className={`absolute inset-0 rounded-2xl p-6 flex flex-col items-center justify-center bg-slate-900 text-white transition-opacity duration-150 ${
-          revealed ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-10"
-        }`}
+        className={`relative h-full w-full rounded-[32px] ${
+          isDragging ? "transition-none" : "transition-transform duration-500"
+        } shadow-xl`}
+        style={{
+          transform: `rotateY(${rotationDeg}deg) rotateZ(${dragTilt}deg)`,
+          transformStyle: "preserve-3d",
+        }}
       >
-        <span className="text-xs uppercase tracking-wide text-white/70">
-          Inglês
-        </span>
-        <div className="mt-2 text-2xl sm:text-3xl font-semibold text-center break-words flex items-center gap-3">
-          {en}
-          <button
-            onClick={speakEnglish}
-            className="ml-2 p-2 rounded-full bg-white/20 hover:bg-white/30"
-            title="Repetir pronúncia"
-          >
-            🔊
-          </button>
+        <div className="absolute inset-0 rounded-[32px] p-8 flex flex-col items-center justify-center text-center text-slate-800 backface-hidden [backface-visibility:hidden] bg-gradient-to-br from-orange-50 via-white to-amber-50 border border-slate-200">
+          <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
+            Português
+          </span>
+          <div className="mt-3 text-2xl sm:text-3xl font-bold break-words flex items-center gap-3 text-slate-900">
+            {pt}
+            <button
+              onClick={speakPortuguese}
+              className="ml-2 p-2 rounded-full bg-white border border-slate-200 hover:bg-slate-50 transition"
+              title="Repetir pronúncia"
+            >
+              🔊
+            </button>
+          </div>
+          <p className="mt-3 text-xs text-slate-500">
+            Arraste ou clique para virar e ver em inglês.
+          </p>
         </div>
-        <div className="mt-3 text-xs opacity-70">
-          Clique novamente para ocultar
+
+        <div
+          className="absolute inset-0 rounded-[32px] p-8 flex flex-col items-center justify-center bg-gradient-to-br from-orange-500 via-amber-400 to-yellow-300 text-slate-900 [backface-visibility:hidden] border border-amber-200"
+          style={{ transform: "rotateY(180deg)" }}
+        >
+          <span className="text-[11px] uppercase tracking-[0.2em] text-slate-900/70">
+            Inglês
+          </span>
+          <div className="mt-3 text-2xl sm:text-3xl font-semibold text-center break-words flex items-center gap-3">
+            {en}
+            <button
+              onClick={speakEnglish}
+              className="ml-2 p-2 rounded-full bg-white/70 text-slate-900 border border-white/80 hover:bg-white transition"
+              title="Repetir pronúncia"
+            >
+              🔊
+            </button>
+          </div>
+          <div className="mt-3 text-xs text-slate-900/70">
+            Clique ou arraste para voltar
+          </div>
         </div>
       </div>
     </div>

@@ -67,12 +67,12 @@ const ConfigDialog: React.FC<ConfigDialogProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4"
       role="dialog"
       aria-modal="true"
       onClick={handleOverlayClick}
     >
-      <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+      <div className="relative w-full max-w-lg rounded-2xl bg-white border border-slate-200 p-6 shadow-2xl shadow-slate-300/40 text-slate-900">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Configurações de voz</h2>
           <button
@@ -87,11 +87,11 @@ const ConfigDialog: React.FC<ConfigDialogProps> = ({
 
         <div className="mt-4 grid gap-5">
           <section>
-            <h3 className="text-sm font-medium text-slate-600 mb-2">
+            <h3 className="text-sm font-medium text-slate-800 mb-2">
               Voz para inglês
             </h3>
             <select
-              className="w-full rounded-xl border px-3 py-2 text-sm"
+              className="w-full rounded-xl border px-3 py-2 text-sm bg-white border-slate-200 text-slate-900 focus:ring-2 focus:ring-indigo-400/70"
               value={valueEn}
               onChange={(event) => {
                 const next = event.target.value;
@@ -117,11 +117,11 @@ const ConfigDialog: React.FC<ConfigDialogProps> = ({
           </section>
 
           <section>
-            <h3 className="text-sm font-medium text-slate-600 mb-2">
+            <h3 className="text-sm font-medium text-slate-800 mb-2">
               Voz para português
             </h3>
             <select
-              className="w-full rounded-xl border px-3 py-2 text-sm"
+              className="w-full rounded-xl border px-3 py-2 text-sm bg-white border-slate-200 text-slate-900 focus:ring-2 focus:ring-emerald-400/70"
               value={valuePt}
               onChange={(event) => {
                 const next = event.target.value;
@@ -148,7 +148,7 @@ const ConfigDialog: React.FC<ConfigDialogProps> = ({
 
           <section>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-slate-600">Velocidade</h3>
+              <h3 className="text-sm font-medium text-slate-800">Velocidade</h3>
               <span className="text-xs text-slate-500">
                 {rate.toFixed(2).replace(/\.00$/, "")}x
               </span>
@@ -160,7 +160,7 @@ const ConfigDialog: React.FC<ConfigDialogProps> = ({
               step={0.05}
               value={rate}
               onChange={(event) => onRateChange(Number(event.target.value))}
-              className="w-full"
+              className="w-full accent-orange-400"
             />
             <p className="mt-1 text-xs text-slate-500">
               Ajuste a velocidade de reprodução da voz.
@@ -168,7 +168,7 @@ const ConfigDialog: React.FC<ConfigDialogProps> = ({
           </section>
 
           <section>
-            <label className="flex items-center gap-3 text-sm">
+            <label className="flex items-center gap-3 text-sm text-slate-800">
               <input
                 type="checkbox"
                 checked={autoSpeak}
@@ -183,7 +183,7 @@ const ConfigDialog: React.FC<ConfigDialogProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-400 text-white text-sm font-semibold shadow-md"
           >
             Concluir
           </button>
@@ -194,4 +194,3 @@ const ConfigDialog: React.FC<ConfigDialogProps> = ({
 };
 
 export default ConfigDialog;
-
