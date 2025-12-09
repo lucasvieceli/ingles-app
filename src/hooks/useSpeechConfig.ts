@@ -2,6 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 
 import { normalizeLang } from "../utils/lang";
 
+type SpeakOptions = {
+  cancelOthers?: boolean;
+  onEnd?: () => void;
+};
+
 export function useSpeechConfig() {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [rate, setRate] = useState(() =>
@@ -82,9 +87,14 @@ export function useSpeechConfig() {
   }, [selectedVoicePt]);
 
   const speak = useCallback(
-    (text: string, langHint: "en" | "pt" = "en") => {
+    (
+      text: string,
+      langHint: "en" | "pt" = "en",
+      options?: SpeakOptions
+    ) => {
       const synth = window?.speechSynthesis;
       if (!synth) return;
+      const { onEnd, cancelOthers = true } = options || {};
 
       const run = (retries = 8) => {
         const available = synth.getVoices();
@@ -146,7 +156,15 @@ export function useSpeechConfig() {
         utter.rate = Math.max(0.1, Math.min(10, rate || 1));
         utter.pitch = 1;
 
-        synth.cancel();
+        if (onEnd) {
+          utter.onend = () => onEnd();
+          utter.onerror = () => onEnd();
+        }
+
+        if (cancelOthers) {
+          synth.cancel();
+        }
+
         setTimeout(() => synth.speak(utter), 20);
       };
 
@@ -168,4 +186,3 @@ export function useSpeechConfig() {
     speak,
   };
 }
-

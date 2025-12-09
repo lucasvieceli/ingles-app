@@ -70,12 +70,7 @@ const CardSwipe: React.FC<CardSwipeProps> = ({
     );
     if (Math.abs(totalDelta) > 60) {
       skipClickRef.current = true;
-      // Arrasto para a direita revela, para a esquerda oculta.
-      if (!revealed && totalDelta > 60) {
-        setRevealed(true);
-      } else if (revealed && totalDelta < -60) {
-        setRevealed(false);
-      }
+      setRevealed((prev) => !prev);
     }
   }
 

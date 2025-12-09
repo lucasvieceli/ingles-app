@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 
+import AudioTab from "./src/components/AudioTab";
 import CreateTab from "./src/components/CreateTab";
 import PlayTab from "./src/components/PlayTab";
 import { defaultCards } from "./src/cards";
@@ -10,7 +11,7 @@ export type { Card } from "./src/types";
 
 export default function App() {
   const [cardsLocal, setCardsLocal] = useState<Card[]>(() => loadCustomCards());
-  const [tab, setTab] = useState<"create" | "play">("create");
+  const [tab, setTab] = useState<"create" | "play" | "audio">("create");
 
   const cards = useMemo(() => [...defaultCards, ...cardsLocal], [cardsLocal]);
   const totalCategories = useMemo(
@@ -47,7 +48,7 @@ export default function App() {
             </div>
           </div>
 
-          <nav className="flex items-center gap-2 bg-white rounded-2xl border border-slate-200 p-1 shadow-md">
+          <nav className="hidden sm:flex items-center gap-2 bg-white rounded-2xl border border-slate-200 p-1 shadow-md">
             <TabButton
               label="Cadastrar"
               description="Adicionar/organizar"
@@ -62,43 +63,86 @@ export default function App() {
               onClick={() => setTab("play")}
               icon="🎯"
             />
+            <TabButton
+              label="Áudio"
+              description="Ouvir sequência"
+              active={tab === "audio"}
+              onClick={() => setTab("audio")}
+              icon="🔊"
+            />
           </nav>
+
+          <div className="grid sm:hidden w-full gap-2">
+            <MobileTabButton
+              label="Cadastrar"
+              description="Adicionar/organizar"
+              active={tab === "create"}
+              onClick={() => setTab("create")}
+              icon="✏️"
+            />
+            <MobileTabButton
+              label="Praticar"
+              description="Revisar e ouvir"
+              active={tab === "play"}
+              onClick={() => setTab("play")}
+              icon="🎯"
+            />
+            <MobileTabButton
+              label="Áudio"
+              description="Ouvir sequência"
+              active={tab === "audio"}
+              onClick={() => setTab("audio")}
+              icon="🔊"
+            />
+          </div>
         </header>
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xl">
-          <div className="grid gap-6 md:grid-cols-[1.25fr,0.95fr] items-start">
-            <div className="space-y-4">
-              <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-orange-600">
-                <span className="h-[1px] w-6 bg-orange-400" />
-                Seu fluxo
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-semibold leading-snug text-slate-900">
-                Cadastre palavras, use pronúncia do navegador e revise com atalhos.
-              </h2>
-              <p className="text-sm sm:text-base text-slate-600 max-w-2xl">
-                Enter revela/oculta, A marca acerto, D marca erro, setas navegam. Importação/exportação por JSON para levar seu baralho.
-              </p>
-              <div className="flex flex-wrap gap-2 text-[12px] text-slate-600">
-                <span className="px-3 py-1 rounded-full bg-orange-50 border border-orange-100 text-orange-800">Enter revela</span>
-                <span className="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-800">A acertei • D errei</span>
-                <span className="px-3 py-1 rounded-full bg-sky-50 border border-sky-100 text-sky-800">Voz automática</span>
+        {tab === "create" ? (
+          <section className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xl">
+            <div className="grid gap-6 md:grid-cols-[1.25fr,0.95fr] items-start">
+              <div className="space-y-4">
+                <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-orange-600">
+                  <span className="h-[1px] w-6 bg-orange-400" />
+                  Seu fluxo
+                </p>
+                <h2 className="text-2xl sm:text-3xl font-semibold leading-snug text-slate-900">
+                  Cadastre palavras, use pronúncia do navegador e revise com atalhos.
+                </h2>
+                <p className="text-sm sm:text-base text-slate-600 max-w-2xl">
+                  Enter revela/oculta, A marca acerto, D marca erro, setas navegam. Importação/exportação por JSON para levar seu baralho.
+                </p>
+                <div className="flex flex-wrap gap-2 text-[12px] text-slate-600">
+                  <span className="px-3 py-1 rounded-full bg-orange-50 border border-orange-100 text-orange-800">Enter revela</span>
+                  <span className="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-800">A acertei • D errei</span>
+                  <span className="px-3 py-1 rounded-full bg-sky-50 border border-sky-100 text-sky-800">Voz automática</span>
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-3 gap-3">
+                <StatCard label="Total de cards" value={totalCards} accent="bg-orange-50 text-orange-900" numberClass="text-2xl font-semibold" />
+                <StatCard label="Categorias" value={totalCategories} accent="bg-sky-50 text-sky-900" numberClass="text-2xl font-semibold" />
+                <StatCard label="Seus cards" value={customCards} accent="bg-emerald-50 text-emerald-900" numberClass="text-2xl font-semibold" />
               </div>
             </div>
-
-            <div className="grid sm:grid-cols-3 gap-3">
-              <StatCard label="Total de cards" value={totalCards} accent="bg-orange-50 text-orange-900" numberClass="text-2xl font-semibold" />
-              <StatCard label="Categorias" value={totalCategories} accent="bg-sky-50 text-sky-900" numberClass="text-2xl font-semibold" />
-              <StatCard label="Seus cards" value={customCards} accent="bg-emerald-50 text-emerald-900" numberClass="text-2xl font-semibold" />
-            </div>
-          </div>
-        </section>
+          </section>
+        ) : null}
 
         <section className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-xl">
           <div className="flex items-center justify-between flex-wrap gap-3 pb-4 border-b border-slate-200">
             <div>
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-500">{tab === "create" ? "Cadastro e organização" : "Treino guiado"}</p>
+              <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+                {tab === "create"
+                  ? "Cadastro e organização"
+                  : tab === "play"
+                  ? "Treino guiado"
+                  : "Somente áudio"}
+              </p>
               <h3 className="text-xl font-semibold text-slate-900 mt-1">
-                {tab === "create" ? "Monte seu baralho" : "Hora de praticar"}
+                {tab === "create"
+                  ? "Monte seu baralho"
+                  : tab === "play"
+                  ? "Hora de praticar"
+                  : "Escute todos os cards"}
               </h3>
             </div>
             <div className="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-full px-3 py-1">
@@ -109,8 +153,10 @@ export default function App() {
           <div className="pt-4">
             {tab === "create" ? (
               <CreateTab cards={cards} setCardsLocal={setCardsLocal} />
-            ) : (
+            ) : tab === "play" ? (
               <PlayTab cards={cards} />
+            ) : (
+              <AudioTab cards={cards} />
             )}
           </div>
         </section>
@@ -150,7 +196,7 @@ const TabButton: React.FC<{
     <button
       onClick={onClick}
       aria-pressed={active}
-      className={`flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-all min-w-[160px] ${
+      className={`flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-all w-full sm:w-auto flex-1 sm:flex-none min-w-0 sm:min-w-[160px] ${
         active
           ? "bg-gradient-to-r from-orange-500 to-amber-400 text-white shadow-md"
           : "text-slate-700 hover:bg-slate-50"
@@ -162,6 +208,49 @@ const TabButton: React.FC<{
       <span className="leading-tight">
         <span className="block text-sm font-semibold">{label}</span>
         <span className="block text-[12px] text-current/80">{description}</span>
+      </span>
+    </button>
+  );
+};
+
+const MobileTabButton: React.FC<{
+  label: string;
+  description: string;
+  active: boolean;
+  onClick: () => void;
+  icon: string;
+}> = ({ label, description, active, onClick, icon }) => {
+  return (
+    <button
+      onClick={onClick}
+      aria-pressed={active}
+      className={`flex items-center justify-between rounded-2xl px-4 py-3 text-left transition-all shadow-sm border ${
+        active
+          ? "bg-gradient-to-r from-orange-500 to-amber-400 text-white border-orange-300 shadow-md"
+          : "bg-white border-slate-200 text-slate-800"
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <span className="text-lg" aria-hidden>
+          {icon}
+        </span>
+        <span className="leading-tight">
+          <span className="block text-sm font-semibold">{label}</span>
+          <span
+            className={`block text-[12px] ${
+              active ? "text-white/90" : "text-slate-600"
+            }`}
+          >
+            {description}
+          </span>
+        </span>
+      </div>
+      <span
+        className={`text-xs font-semibold ${
+          active ? "text-white/80" : "text-slate-400"
+        }`}
+      >
+        →
       </span>
     </button>
   );
