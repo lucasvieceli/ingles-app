@@ -15,6 +15,7 @@ const shuffleIndices = (indices: number[]) => {
 
 export function useDeck(
   cards: Card[],
+  selectedBooks: string[],
   selectedCategories: string[],
   onScoreDelta: ScoreDeltaFn
 ) {
@@ -26,17 +27,27 @@ export function useDeck(
   );
 
   const playableEntries = useMemo(() => {
+    const normalizedBooks = selectedBooks
+      .map((book) => book.trim())
+      .filter(Boolean);
     const normalizedSelections = selectedCategories
       .map((cat) => cat.trim())
       .filter(Boolean);
-    if (!normalizedSelections.length) {
+    if (!normalizedBooks.length && !normalizedSelections.length) {
       return cards.map((card, i) => ({ card, index: i }));
     }
+    const allowedBooks = new Set(normalizedBooks);
     const allowed = new Set(normalizedSelections);
     return cards
       .map((card, i) => ({ card, index: i }))
-      .filter((entry) => allowed.has((entry.card.category || "").trim()));
-  }, [cards, selectedCategories]);
+      .filter((entry) => {
+        const cardBook = (entry.card.book || "").trim();
+        const cardCategory = (entry.card.category || "").trim();
+        const matchesBook = !allowedBooks.size || allowedBooks.has(cardBook);
+        const matchesCategory = !allowed.size || allowed.has(cardCategory);
+        return matchesBook && matchesCategory;
+      });
+  }, [cards, selectedBooks, selectedCategories]);
 
   const playableCount = playableEntries.length;
 
@@ -163,4 +174,3 @@ export function useDeck(
     isDone,
   };
 }
-

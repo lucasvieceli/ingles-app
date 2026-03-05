@@ -19,11 +19,16 @@ const PlayTab: React.FC<PlayTabProps> = ({ cards }) => {
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
 
   const {
+    books,
+    selectedBooks,
+    isAllBooksSelected,
+    bookSummary,
+    toggleBook,
+    selectAllBooks,
     categories,
     selectedCategories,
-    isAllSelected,
     categorySummary,
-    toggleCategory,
+    toggleCategory: onToggleCategory,
     selectAllCategories,
   } = useCategorySelection(cards);
 
@@ -66,7 +71,7 @@ const PlayTab: React.FC<PlayTabProps> = ({ cards }) => {
     isDone,
     answers,
     order,
-  } = useDeck(cards, selectedCategories, applyScoreDelta);
+  } = useDeck(cards, selectedBooks, selectedCategories, applyScoreDelta);
 
   useEffect(() => {
     if (isDone || !current || !autoSpeak) return;
@@ -135,7 +140,7 @@ const PlayTab: React.FC<PlayTabProps> = ({ cards }) => {
       <div className="grid gap-4">
         {scorePanel}
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 text-center text-slate-700">
-          Não há cards nas categorias selecionadas.
+          Não há cards nos filtros selecionados.
         </div>
       </div>
     );
@@ -221,9 +226,11 @@ const PlayTab: React.FC<PlayTabProps> = ({ cards }) => {
                     <div className="font-semibold text-slate-900">{card.en}</div>
                     <div className="text-xs text-slate-500 mt-1">PT</div>
                     <div>{card.pt}</div>
-                    {card.category ? (
+                    {card.book || card.category ? (
                       <div className="mt-1 text-[11px] text-slate-500">
-                        Categoria: {card.category}
+                        {card.book ? `Livro: ${card.book}` : ""}
+                        {card.book && card.category ? " • " : ""}
+                        {card.category ? `Categoria: ${card.category}` : ""}
                       </div>
                     ) : null}
                   </li>
@@ -249,9 +256,11 @@ const PlayTab: React.FC<PlayTabProps> = ({ cards }) => {
                     <div className="font-semibold text-slate-900">{card.en}</div>
                     <div className="text-xs text-slate-500 mt-1">PT</div>
                     <div>{card.pt}</div>
-                    {card.category ? (
+                    {card.book || card.category ? (
                       <div className="mt-1 text-[11px] text-slate-500">
-                        Categoria: {card.category}
+                        {card.book ? `Livro: ${card.book}` : ""}
+                        {card.book && card.category ? " • " : ""}
+                        {card.category ? `Categoria: ${card.category}` : ""}
                       </div>
                     ) : null}
                   </li>
@@ -277,7 +286,7 @@ const PlayTab: React.FC<PlayTabProps> = ({ cards }) => {
             onClick={() => setIsCatDialogOpen(true)}
             className="px-3 py-1.5 rounded-xl border border-slate-200 text-sm bg-white text-slate-800 hover:bg-slate-50 transition-colors flex items-center gap-2"
           >
-            {categorySummary}
+            📚 {bookSummary} • 🗂️ {categorySummary}
           </button>
           <button
             type="button"
@@ -371,11 +380,16 @@ const PlayTab: React.FC<PlayTabProps> = ({ cards }) => {
 
       {isCatDialogOpen ? (
         <CategoryDialog
+          books={books}
+          selectedBooks={selectedBooks}
+          isAllBooksSelected={isAllBooksSelected}
+          onToggleBook={toggleBook}
+          onSelectAllBooks={selectAllBooks}
           categories={categories}
-          selected={selectedCategories}
-          isAllSelected={isAllSelected}
-          onToggle={toggleCategory}
-          onSelectAll={selectAllCategories}
+          selectedCategories={selectedCategories}
+          isAllCategoriesSelected={selectedCategories.length === 0}
+          onToggleCategory={onToggleCategory}
+          onSelectAllCategories={selectAllCategories}
           onClose={() => setIsCatDialogOpen(false)}
         />
       ) : null}

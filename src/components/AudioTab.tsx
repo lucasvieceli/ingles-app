@@ -38,19 +38,24 @@ const AudioTab: React.FC<AudioTabProps> = ({ cards }) => {
   const gapTimeoutRef = useRef<number | null>(null);
 
   const {
+    books,
+    selectedBooks,
+    isAllBooksSelected,
+    bookSummary,
+    toggleBook,
+    selectAllBooks,
     categories,
     selectedCategories,
-    isAllSelected,
+    isAllCategoriesSelected,
     categorySummary,
-    toggleCategory,
+    toggleCategory: onToggleCategory,
     selectAllCategories,
+    matchesCard,
   } = useCategorySelection(cards);
 
   const filteredCards = useMemo(() => {
-    if (isAllSelected) return cards;
-    const selectedSet = new Set(selectedCategories);
-    return cards.filter((card) => selectedSet.has((card.category || "").trim()));
-  }, [cards, isAllSelected, selectedCategories]);
+    return cards.filter(matchesCard);
+  }, [cards, matchesCard]);
 
   const total = filteredCards.length;
   const currentCard = filteredCards[currentIndex];
@@ -180,20 +185,25 @@ const AudioTab: React.FC<AudioTabProps> = ({ cards }) => {
   if (!filteredCards.length) {
     return (
       <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-slate-700 space-y-3">
-        <div>Não há cards nas categorias selecionadas.</div>
+        <div>Não há cards nos filtros selecionados.</div>
         <button
           onClick={() => setIsCatDialogOpen(true)}
           className="px-4 py-2 rounded-xl border border-slate-200 text-slate-800 hover:bg-slate-50"
         >
-          Escolher categorias
+          Ajustar filtros
         </button>
         {isCatDialogOpen ? (
           <CategoryDialog
+            books={books}
+            selectedBooks={selectedBooks}
+            isAllBooksSelected={isAllBooksSelected}
+            onToggleBook={toggleBook}
+            onSelectAllBooks={selectAllBooks}
             categories={categories}
-            selected={selectedCategories}
-            isAllSelected={isAllSelected}
-            onToggle={toggleCategory}
-            onSelectAll={selectAllCategories}
+            selectedCategories={selectedCategories}
+            isAllCategoriesSelected={isAllCategoriesSelected}
+            onToggleCategory={onToggleCategory}
+            onSelectAllCategories={selectAllCategories}
             onClose={() => setIsCatDialogOpen(false)}
           />
         ) : null}
@@ -215,7 +225,7 @@ const AudioTab: React.FC<AudioTabProps> = ({ cards }) => {
             onClick={() => setIsCatDialogOpen(true)}
             className="px-3 py-1.5 rounded-xl border border-slate-200 text-sm bg-white text-slate-800 hover:bg-slate-50 transition-colors flex items-center gap-2"
           >
-            🗂️ {categorySummary}
+            📚 {bookSummary} • 🗂️ {categorySummary}
           </button>
           <button
             onClick={() => setIsConfigOpen(true)}
@@ -294,11 +304,16 @@ const AudioTab: React.FC<AudioTabProps> = ({ cards }) => {
       ) : null}
       {isCatDialogOpen ? (
         <CategoryDialog
+          books={books}
+          selectedBooks={selectedBooks}
+          isAllBooksSelected={isAllBooksSelected}
+          onToggleBook={toggleBook}
+          onSelectAllBooks={selectAllBooks}
           categories={categories}
-          selected={selectedCategories}
-          isAllSelected={isAllSelected}
-          onToggle={toggleCategory}
-          onSelectAll={selectAllCategories}
+          selectedCategories={selectedCategories}
+          isAllCategoriesSelected={isAllCategoriesSelected}
+          onToggleCategory={onToggleCategory}
+          onSelectAllCategories={selectAllCategories}
           onClose={() => setIsCatDialogOpen(false)}
         />
       ) : null}

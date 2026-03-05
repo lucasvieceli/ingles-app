@@ -9,77 +9,146 @@ type CreateTabProps = {
   setCardsLocal: React.Dispatch<React.SetStateAction<Card[]>>;
 };
 
+const LEGACY_CONNECTION_PREFIX_REGEX = /^Connection\s*-\s*(.+)$/i;
+
+const normalizeBookAndCategory = (rawBook: unknown, rawCategory: unknown) => {
+  const normalizedBookRaw =
+    typeof rawBook === "string" ? rawBook.trim() : "";
+  const normalizedCategoryRaw =
+    typeof rawCategory === "string" ? rawCategory.trim() : "";
+
+  let normalizedBook = normalizedBookRaw || undefined;
+  let normalizedCategory = normalizedCategoryRaw || undefined;
+
+  if (!normalizedBook && normalizedCategory) {
+    const match = normalizedCategory.match(LEGACY_CONNECTION_PREFIX_REGEX);
+    if (match) {
+      normalizedBook = "Connection";
+      normalizedCategory = match[1]?.trim() || undefined;
+    }
+  }
+
+  return { book: normalizedBook, category: normalizedCategory };
+};
+
 const CreateTab: React.FC<CreateTabProps> = ({ cards, setCardsLocal }) => {
   const [en, setEn] = useState("");
   const [pt, setPt] = useState("");
+  const [book, setBook] = useState("");
   const [cat, setCat] = useState("");
   const [search, setSearch] = useState("");
-  const [expandedCat, setExpandedCat] = useState<string | null>(null);
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
+  const [searchBook, setSearchBook] = useState("__all");
   const [searchCat, setSearchCat] = useState("__all");
+
+  const books = useMemo(
+    () =>
+      Array.from(
+        new Set(cards.map((card) => (card.book || "").trim()).filter(Boolean))
+      ).sort((a, b) => a.localeCompare(b, "pt-BR")),
+    [cards]
+  );
 
   const categories = useMemo(
     () =>
       Array.from(
         new Set(cards.map((card) => (card.category || "").trim()).filter(Boolean))
-      ).sort(),
+      ).sort((a, b) => a.localeCompare(b, "pt-BR")),
     [cards]
   );
+
+  const categoriesBySearchBook = useMemo(() => {
+    return Array.from(
+      new Set(
+        cards
+          .filter((card) =>
+            searchBook === "__all" ? true : (card.book || "") === searchBook
+          )
+          .map((card) => (card.category || "").trim())
+          .filter(Boolean)
+      )
+    ).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [cards, searchBook]);
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     return cards.filter((card) => {
+      const cardBook = (card.book || "").toLowerCase();
       const cardCategory = (card.category || "").toLowerCase();
       const matchesText =
         !query ||
         card.en.toLowerCase().includes(query) ||
         card.pt.toLowerCase().includes(query) ||
+        cardBook.includes(query) ||
         cardCategory.includes(query);
+      const matchesBook = searchBook === "__all" ? true : (card.book || "") === searchBook;
       const matchesCategory =
         searchCat === "__all" ? true : (card.category || "") === searchCat;
-      return matchesText && matchesCategory;
+      return matchesText && matchesBook && matchesCategory;
     });
-  }, [cards, search, searchCat]);
+  }, [cards, search, searchBook, searchCat]);
 
   const grouped = useMemo(
     () =>
       Array.from(
         filtered.reduce((acc, card) => {
-          const key = (card.category || "").trim() || "__none";
-          if (!acc.has(key)) acc.set(key, [] as Card[]);
-          acc.get(key)!.push(card);
+          const groupBook = (card.book || "").trim() || "__none_book";
+          const groupCategory = (card.category || "").trim() || "__none_category";
+          const key = `${groupBook}::${groupCategory}`;
+          if (!acc.has(key)) {
+            acc.set(key, {
+              book: groupBook,
+              category: groupCategory,
+              cards: [] as Card[],
+            });
+          }
+          acc.get(key)!.cards.push(card);
           return acc;
-        }, new Map<string, Card[]>())
+        }, new Map<string, { book: string; category: string; cards: Card[] }>())
       )
-        .map(([key, groupCards]) => ({
+        .map(([key, group]) => ({
           key,
-          label: key === "__none" ? "Sem categoria" : key,
-          cards: groupCards,
+          book: group.book === "__none_book" ? "" : group.book,
+          category: group.category === "__none_category" ? "" : group.category,
+          cards: group.cards,
         }))
-        .sort((a, b) => a.label.localeCompare(b.label, "pt-BR")),
+        .sort((a, b) => {
+          const labelA = `${a.book || "Sem livro"} • ${a.category || "Sem categoria"}`;
+          const labelB = `${b.book || "Sem livro"} • ${b.category || "Sem categoria"}`;
+          return labelA.localeCompare(labelB, "pt-BR");
+        }),
     [filtered]
   );
 
   useEffect(() => {
-    if (expandedCat && !grouped.some((group) => group.key === expandedCat)) {
-      setExpandedCat(null);
+    if (expandedGroup && !grouped.some((group) => group.key === expandedGroup)) {
+      setExpandedGroup(null);
     }
-  }, [grouped, expandedCat]);
+  }, [grouped, expandedGroup]);
 
   useEffect(() => {
-    if (searchCat !== "__all") {
-      setExpandedCat(searchCat);
+    if (searchCat !== "__all" && !categoriesBySearchBook.includes(searchCat)) {
+      setSearchCat("__all");
     }
-  }, [searchCat]);
+  }, [categoriesBySearchBook, searchCat]);
+
+  useEffect(() => {
+    if (searchBook === "__all" && searchCat === "__all") return;
+    if (!grouped.length) return;
+    setExpandedGroup(grouped[0].key);
+  }, [grouped, searchBook, searchCat]);
 
   function addCard() {
     if (!en.trim() || !pt.trim()) return;
+    const normalized = normalizeBookAndCategory(book, cat);
     setCardsLocal((prev) => {
       const newCards = [
         {
           id: generateId(),
           en: en.trim(),
           pt: pt.trim(),
-          category: cat.trim() || undefined,
+          book: normalized.book,
+          category: normalized.category,
         },
         ...prev,
       ];
@@ -89,6 +158,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ cards, setCardsLocal }) => {
     });
     setEn("");
     setPt("");
+    setBook("");
     setCat("");
   }
 
@@ -102,16 +172,21 @@ const CreateTab: React.FC<CreateTabProps> = ({ cards, setCardsLocal }) => {
 
   function importJson(jsonText: string) {
     try {
-      const data = JSON.parse(jsonText) as
-        | Card[]
-        | { en: string; pt: string; category?: string }[];
-      const normalized: Card[] = (data as any[])
-        .map((item: any) => ({
-          id: item.id || generateId(),
-          en: String(item.en || ""),
-          pt: String(item.pt || ""),
-          category: item.category ? String(item.category) : undefined,
-        }))
+      const data = JSON.parse(jsonText) as unknown;
+      if (!Array.isArray(data)) {
+        throw new Error("JSON deve ser uma lista de cards");
+      }
+      const normalized: Card[] = data
+        .map((item: any) => {
+          const normalizedFields = normalizeBookAndCategory(item.book, item.category);
+          return {
+            id: item.id || generateId(),
+            en: String(item.en || "").trim(),
+            pt: String(item.pt || "").trim(),
+            book: normalizedFields.book,
+            category: normalizedFields.category,
+          };
+        })
         .filter((card) => card.en && card.pt);
       setCardsLocal((prev) => {
         const next = [...normalized, ...prev];
@@ -152,12 +227,25 @@ const CreateTab: React.FC<CreateTabProps> = ({ cards, setCardsLocal }) => {
           placeholder="e.g., maçã"
           className="rounded-xl px-3 py-2 bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-orange-400/70 focus:border-orange-400/60 transition"
         />
+        <label className="text-xs uppercase tracking-[0.18em] text-slate-600">Livro (opcional)</label>
+        <input
+          list="books"
+          value={book}
+          onChange={(event) => setBook(event.target.value)}
+          placeholder="e.g., Connection"
+          className="rounded-xl px-3 py-2 bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-orange-400/70 focus:border-orange-400/60 transition"
+        />
+        <datalist id="books">
+          {books.map((bookItem) => (
+            <option key={bookItem} value={bookItem} />
+          ))}
+        </datalist>
         <label className="text-xs uppercase tracking-[0.18em] text-slate-600">Categoria (opcional)</label>
         <input
           list="cats"
           value={cat}
           onChange={(event) => setCat(event.target.value)}
-          placeholder="e.g., Frutas, Verbos, Casa"
+          placeholder="e.g., 1 - A, Verbos, Casa"
           className="rounded-xl px-3 py-2 bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-orange-400/70 focus:border-orange-400/60 transition"
         />
         <datalist id="cats">
@@ -187,16 +275,28 @@ const CreateTab: React.FC<CreateTabProps> = ({ cards, setCardsLocal }) => {
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar por inglês, português ou categoria"
+            placeholder="Buscar por inglês, português, livro ou categoria"
             className="rounded-xl px-3 py-2 sm:max-w-72 w-full bg-white border border-slate-200 text-slate-900 placeholder:text-slate-500 focus:ring-2 focus:ring-orange-400/70 focus:border-orange-400/60 transition"
           />
+          <select
+            value={searchBook}
+            onChange={(event) => setSearchBook(event.target.value)}
+            className="rounded-xl px-3 py-2 text-sm bg-white border border-slate-200 text-slate-900 focus:ring-2 focus:ring-amber-400/70"
+          >
+            <option value="__all">Todos os livros</option>
+            {books.map((bookItem) => (
+              <option key={bookItem} value={bookItem}>
+                {bookItem}
+              </option>
+            ))}
+          </select>
           <select
             value={searchCat}
             onChange={(event) => setSearchCat(event.target.value)}
             className="rounded-xl px-3 py-2 text-sm bg-white border border-slate-200 text-slate-900 focus:ring-2 focus:ring-emerald-400/70"
           >
-            <option value="__all">Todas</option>
-            {categories.map((category) => (
+            <option value="__all">Todas as categorias</option>
+            {categoriesBySearchBook.map((category) => (
               <option key={category} value={category}>
                 {category}
               </option>
@@ -210,8 +310,8 @@ const CreateTab: React.FC<CreateTabProps> = ({ cards, setCardsLocal }) => {
 
       {grouped.length ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {grouped.map(({ key, label, cards: groupedCards }) => {
-            const isOpen = expandedCat === key;
+          {grouped.map(({ key, book: groupBook, category: groupCategory, cards: groupedCards }) => {
+            const isOpen = expandedGroup === key;
             return (
               <div
                 key={key}
@@ -220,16 +320,19 @@ const CreateTab: React.FC<CreateTabProps> = ({ cards, setCardsLocal }) => {
                 <button
                   type="button"
                   onClick={() =>
-                    setExpandedCat((prev) => (prev === key ? null : key))
+                    setExpandedGroup((prev) => (prev === key ? null : key))
                   }
                   className="text-left group"
                 >
                   <div className="text-[11px] uppercase tracking-wide text-slate-500">
-                    Categoria
+                    Livro / Categoria
                   </div>
                   <div className="mt-1 text-xl font-semibold text-slate-900 flex items-center gap-2">
-                    {label}
+                    {groupBook || "Sem livro"}
                     <span className="h-2 w-2 rounded-full bg-emerald-400/70 animate-pulse" />
+                  </div>
+                  <div className="text-sm text-slate-600 mt-1">
+                    {groupCategory || "Sem categoria"}
                   </div>
                   <div className="text-xs text-slate-500 mt-2">
                     {groupedCards.length}{" "}
@@ -248,6 +351,13 @@ const CreateTab: React.FC<CreateTabProps> = ({ cards, setCardsLocal }) => {
                         <div className="text-lg font-semibold text-slate-900">{card.en}</div>
                         <div className="text-[11px] uppercase tracking-wide text-slate-500">PT</div>
                         <div className="text-base text-slate-800">{card.pt}</div>
+                        {card.book || card.category ? (
+                          <div className="text-xs text-slate-500">
+                            {card.book ? `Livro: ${card.book}` : ""}
+                            {card.book && card.category ? " • " : ""}
+                            {card.category ? `Categoria: ${card.category}` : ""}
+                          </div>
+                        ) : null}
                         <div className="pt-2 flex justify-end">
                           <button
                             onClick={() => removeCard(card.id)}

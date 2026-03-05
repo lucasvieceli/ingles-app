@@ -1,20 +1,30 @@
 import React from "react";
 
 type CategoryDialogProps = {
+  books: string[];
+  selectedBooks: string[];
+  isAllBooksSelected: boolean;
+  onToggleBook: (book: string) => void;
+  onSelectAllBooks: () => void;
   categories: string[];
-  selected: string[];
-  isAllSelected: boolean;
-  onToggle: (category: string) => void;
-  onSelectAll: () => void;
+  selectedCategories: string[];
+  isAllCategoriesSelected: boolean;
+  onToggleCategory: (category: string) => void;
+  onSelectAllCategories: () => void;
   onClose: () => void;
 };
 
 const CategoryDialog: React.FC<CategoryDialogProps> = ({
+  books,
+  selectedBooks,
+  isAllBooksSelected,
+  onToggleBook,
+  onSelectAllBooks,
   categories,
-  selected,
-  isAllSelected,
-  onToggle,
-  onSelectAll,
+  selectedCategories,
+  isAllCategoriesSelected,
+  onToggleCategory,
+  onSelectAllCategories,
   onClose,
 }) => {
   return (
@@ -22,9 +32,11 @@ const CategoryDialog: React.FC<CategoryDialogProps> = ({
       <div className="relative w-full max-w-2xl rounded-2xl bg-white border border-slate-200 p-6 shadow-2xl shadow-slate-300/40">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Categorias</h2>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Livros e categorias
+            </h2>
             <p className="text-sm text-slate-600">
-              Selecione as categorias que deseja revisar agora.
+              Selecione os filtros que deseja revisar agora.
             </p>
           </div>
           <button
@@ -38,48 +50,102 @@ const CategoryDialog: React.FC<CategoryDialogProps> = ({
         </div>
 
         <div className="mt-4 max-h-[60vh] overflow-y-auto">
-          {categories.length ? (
-            <ul className="grid sm:grid-cols-2 gap-2">
-              {categories.map((cat) => {
-                const active = selected.includes(cat);
-                return (
-                  <li
-                    key={cat}
-                    className={`rounded-xl border px-3 py-2 transition-colors ${
-                      active
-                        ? "border-emerald-300 bg-emerald-50"
-                        : "border-slate-200 bg-slate-50"
-                    }`}
-                  >
-                    <label className="flex items-center gap-3 text-sm text-slate-900">
-                      <input
-                        type="checkbox"
-                        checked={active}
-                        onChange={() => onToggle(cat)}
-                      />
-                      <span>{cat}</span>
-                    </label>
-                  </li>
-                );
-              })}
-              </ul>
-          ) : (
-            <div className="text-sm text-slate-600">
-              Nenhuma categoria cadastrada até o momento.
+          <div className="space-y-5">
+            <div>
+              <div className="text-xs uppercase tracking-wide text-slate-500 mb-2">
+                Livros
+              </div>
+              {books.length ? (
+                <ul className="grid sm:grid-cols-2 gap-2">
+                  {books.map((book) => {
+                    const active = selectedBooks.includes(book);
+                    return (
+                      <li
+                        key={book}
+                        className={`rounded-xl border px-3 py-2 transition-colors ${
+                          active
+                            ? "border-orange-300 bg-orange-50"
+                            : "border-slate-200 bg-slate-50"
+                        }`}
+                      >
+                        <label className="flex items-center gap-3 text-sm text-slate-900">
+                          <input
+                            type="checkbox"
+                            checked={active}
+                            onChange={() => onToggleBook(book)}
+                          />
+                          <span>{book}</span>
+                        </label>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <div className="text-sm text-slate-600">
+                  Nenhum livro cadastrado até o momento.
+                </div>
+              )}
             </div>
-          )}
+
+            <div>
+              <div className="text-xs uppercase tracking-wide text-slate-500 mb-2">
+                Categorias
+              </div>
+              {categories.length ? (
+                <ul className="grid sm:grid-cols-2 gap-2">
+                  {categories.map((cat) => {
+                    const active = selectedCategories.includes(cat);
+                    return (
+                      <li
+                        key={cat}
+                        className={`rounded-xl border px-3 py-2 transition-colors ${
+                          active
+                            ? "border-emerald-300 bg-emerald-50"
+                            : "border-slate-200 bg-slate-50"
+                        }`}
+                      >
+                        <label className="flex items-center gap-3 text-sm text-slate-900">
+                          <input
+                            type="checkbox"
+                            checked={active}
+                            onChange={() => onToggleCategory(cat)}
+                          />
+                          <span>{cat}</span>
+                        </label>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <div className="text-sm text-slate-600">
+                  Nenhuma categoria cadastrada para os livros selecionados.
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        <div className="mt-6 flex justify-end gap-2">
-          {!isAllSelected ? (
-            <button
-              type="button"
-              onClick={onSelectAll}
-              className="text-sm text-slate-600 underline"
-            >
-              Limpar seleção
-            </button>
-          ) : null}
+        <div className="mt-6 flex justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-3">
+            {!isAllBooksSelected ? (
+              <button
+                type="button"
+                onClick={onSelectAllBooks}
+                className="text-sm text-slate-600 underline"
+              >
+                Limpar livros
+              </button>
+            ) : null}
+            {!isAllCategoriesSelected ? (
+              <button
+                type="button"
+                onClick={onSelectAllCategories}
+                className="text-sm text-slate-600 underline"
+              >
+                Limpar categorias
+              </button>
+            ) : null}
+          </div>
           <button
             type="button"
             onClick={onClose}
